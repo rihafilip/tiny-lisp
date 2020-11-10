@@ -26,6 +26,10 @@ void GC::Stop ()
 	delete m_All;
 	delete m_Roots;
 	delete m_Available;
+
+	m_All = nullptr;
+	m_Roots = nullptr;
+	m_Available = nullptr;
 }
 
 void GC::AddRoot ( Memory * root )
