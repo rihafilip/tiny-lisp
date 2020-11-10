@@ -30,6 +30,11 @@ namespace lisp
 		std::string str ();
 		sedc::Instruction ins ();
 		/// @}
+		
+		/// Asks if this value is null
+		bool isNull ();
+		/// Asks if this value is cons
+		bool isCons ();
 
 	private:
 		/// Asigns itself as root in GC

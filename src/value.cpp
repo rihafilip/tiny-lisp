@@ -92,3 +92,15 @@ sedc::Instruction Value::ins ()
 
 	return memory -> instruct;
 }
+
+/*********************************************************/
+
+bool Value::isNull ()
+{
+	return memory -> type == GC::MemoryType::EMPTY;
+}
+
+bool Value::isCons ()
+{
+	return memory -> type == GC::MemoryType::CONS;
+}
