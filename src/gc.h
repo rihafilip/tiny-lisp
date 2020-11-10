@@ -44,6 +44,8 @@ namespace lisp
 		public:
 			/// Default constructor
 			Memory();
+			/// Destructor, takes care of name
+			~Memory();
 			/// equality comparator
 			bool operator== ( const Memory & other );
 

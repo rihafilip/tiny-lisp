@@ -1,5 +1,6 @@
 #include "gc.h"
 #include <stdexcept>
+#include <cstring>
 using namespace lisp;
 
 // Initialization of static members
@@ -57,7 +58,7 @@ GC::Memory * GC::GetMemory( const std::string & str )
 {
 	Memory * mem = GetNextEmptyMemory();
 	mem -> type = SYM;
-	mem -> name = str.c_str();
+	mem -> name = std::strcpy( new char[ str.size() + 1 ], str.c_str());
 	return mem;
 }
 
@@ -102,8 +103,12 @@ void GC::Sweep ( List * lst )
 		return;
 	// not marked == not used
 	if ( ! lst -> memory -> marked )
+	{
+		if ( lst -> memory -> type == SYM )
+			delete[] lst -> memory -> name;
 		// prepend to m_Available;
 		m_Available = new List ( lst -> memory, m_Available );
+	}
 
 	Sweep ( lst -> next );
 }
@@ -135,6 +140,12 @@ GC::Memory::Memory()
 {
 	marked = false;
 	type = UNDEF;
+}
+
+GC::Memory::~Memory()
+{
+	if ( type == SYM )
+		delete[] name;
 }
 
 void GC::Memory::Mark ()
