@@ -60,6 +60,7 @@ namespace lisp
 		};
 
 		/// Starts the garbage collector, initializes all needed parameters
+		/// Also allocates more memory buffers if needed
 		static void Start( int todo = LIST_SIZE );
 		// Stops the garbage collector and prevents memory leaks
 		static void Stop();

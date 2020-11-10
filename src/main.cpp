@@ -5,7 +5,7 @@ using namespace lisp;
 
 void testGC ()
 {
-	GC::Start(10);
+	GC::Start(20);
 	for (int i = 0; i < 10; ++i)
 	{
 		GC::Memory * mem = GC::GetMemory(i);
@@ -13,7 +13,7 @@ void testGC ()
 		GC::RemoveRoot(mem);
 	}
 
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 20; ++i)
 	{
 		GC::Memory * mem = GC::GetMemory("hh");
 		GC::AddRoot(mem);
@@ -21,7 +21,7 @@ void testGC ()
 	}
 
 	GC::Stop();
-	GC::Start(10);
+	GC::Start(20);
 	GC::Stop();
 }
 

@@ -116,8 +116,9 @@ GC::Memory * GC::GetNextEmptyMemory ()
 		Mark();
 		delete m_Available;
 		Sweep();
+		/// still no empty memory block, allocate more
 		if ( m_Available == nullptr )
-			throw std::runtime_error( "Ran out of memory." );
+			Start();
 	}
 
 	Memory * ret = m_Available -> memory;
