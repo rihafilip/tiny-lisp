@@ -3,7 +3,7 @@
 using namespace lisp;
 using namespace sedc;
 
-std::ostream & operator<< ( std::ostream & os, Instruction ins )
+std::string lisp::sedc::toString ( Instruction ins )
 {
 	std::map<Instruction, std::string> map;
 	map . insert( std::make_pair(LDC, "LDC") );
@@ -23,5 +23,10 @@ std::ostream & operator<< ( std::ostream & os, Instruction ins )
 	map . insert( std::make_pair(AP, " AP") );
 	map . insert( std::make_pair(RTN, "RTN") );
 
-	return os << map[ins];
+	return map[ins];
+}
+
+std::ostream & lisp::sedc::operator<< ( std::ostream & os, Instruction ins )
+{
+	return os << toString(ins);
 }

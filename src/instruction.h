@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <string>
 
 namespace lisp
 {
@@ -25,6 +26,7 @@ namespace lisp
 			RTN
 		};
 
+		std::string toString ( Instruction ins );
 		std::ostream & operator<< ( std::ostream & os, Instruction ins );
 	}
 }
