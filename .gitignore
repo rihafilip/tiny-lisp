@@ -1,0 +1,6 @@
+*.o
+TinyLISP
+build/*
+vgcore.*
+doc/*
+Makefile.d
