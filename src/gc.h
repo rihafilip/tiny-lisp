@@ -24,7 +24,7 @@ namespace lisp
 			UNDEF, /// not defined
 			EMPTY, /// empty (null) memory block
 			NUM, /// integer
-			STR, /// string
+			SYM, /// symbol
 			CONS, /// cons cell
 			INST /// SEDC instruction
 		};
@@ -52,6 +52,7 @@ namespace lisp
 			union
 			{
 				int number;
+				// symbol name
 				const char * name;
 				// car, cdr
 				std::pair< Memory *, Memory *> cons;

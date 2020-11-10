@@ -12,8 +12,8 @@ namespace lisp
 		 * @{
 		 */		
 		static Value Integer ( int num );
-		static Value String ( const std::string & in);
-		static Value Cons ( Value & car, Value & cdr );
+		static Value Symbol ( const std::string & in);
+		static Value Cons ( Value car, Value cdr );
 		static Value Instruction ( sedc::Instruction instruct );
 		static Value Null ();
 		///@}
@@ -27,7 +27,7 @@ namespace lisp
 		Value car ();
 		Value cdr ();
 		int num ();
-		std::string str ();
+		std::string sym ();
 		sedc::Instruction ins ();
 		/// @}
 		

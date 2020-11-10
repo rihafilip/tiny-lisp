@@ -39,7 +39,7 @@ void testValue ()
 	Value b = Value::Integer( 5 );
 	try
 	{
-		std::cout << b.str() << std::endl;	
+		std::cout << b.sym() << std::endl;	
 	}
 	catch ( std::runtime_error & e )
 	{
@@ -49,8 +49,8 @@ void testValue ()
 
 	for ( int i = 0; i < 3; ++i )
 	{
-		Value a = Value::String( std::string("a") );
-		std::cout << a.str() << std::endl;
+		Value a = Value::Symbol( std::string("a") );
+		std::cout << a.sym() << std::endl;
 	}
 
 	GC::Stop();

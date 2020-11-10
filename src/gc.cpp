@@ -8,7 +8,7 @@ GC::List * GC::m_Available = nullptr;
 GC::List * GC::m_All = nullptr;
 
 /*******************************************/
-
+// TODO null is all in one node
 void GC::Start ( int todo )
 {
 	if ( ! todo )
@@ -56,7 +56,7 @@ GC::Memory * GC::GetMemory( int num )
 GC::Memory * GC::GetMemory( const std::string & str )
 {
 	Memory * mem = GetNextEmptyMemory();
-	mem -> type = STR;
+	mem -> type = SYM;
 	mem -> name = str.c_str();
 	return mem;
 }
@@ -158,7 +158,7 @@ bool GC::Memory::operator== ( const Memory & other )
 		case NUM:
 			return this -> number == other . number;
 
-		case STR:
+		case SYM:
 			return this -> name == other . name;
 
 		case CONS:
@@ -182,8 +182,8 @@ std::string lisp::toString ( GC::MemoryType type )
 			return "null";
 		case GC::MemoryType::NUM:
 			return "number";
-		case GC::MemoryType::STR:
-			return "string";
+		case GC::MemoryType::SYM:
+			return "symbol";
 		case GC::MemoryType::CONS:
 			return "cons";
 		case GC::MemoryType::INST:

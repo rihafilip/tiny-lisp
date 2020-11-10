@@ -6,7 +6,7 @@ Value Value::Integer ( int num )
 	return Value ( GC::GetMemory( num ) );
 }
 
-Value Value::String ( const std::string & in)
+Value Value::Symbol ( const std::string & in )
 {
 	return Value ( GC::GetMemory( in ) );
 }
@@ -77,10 +77,10 @@ int Value::num ()
 	return memory -> number;
 }
 
-std::string Value::str ()
+std::string Value::sym ()
 {
-	if ( memory -> type != GC::MemoryType::STR )
-		error (GC::MemoryType::STR);
+	if ( memory -> type != GC::MemoryType::SYM )
+		error (GC::MemoryType::SYM);
 
 	return memory -> name;
 }
