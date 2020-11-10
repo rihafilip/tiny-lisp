@@ -1,7 +1,17 @@
-#include "value.h"
+#include "lexer.h"
 #include <cassert>
 #include <stdexcept>
 using namespace lisp;
+
+void testLexer ()
+{
+	GC::Start(1000);
+	Value out =  Lexer::Scan( "( defun (addtwelve x) (+ x 12))" );
+	std::cout << "expression: " << out.car() << std::endl <<std::endl;
+	std::cout << "Built-in: " << out.cdr().car() << std::endl<<std::endl;
+	std::cout << "Tokens: " << out.cdr().cdr() << std::endl<<std::endl;
+	GC::Stop();
+}
 
 void testGC ()
 {
@@ -60,5 +70,6 @@ int main(int argc, char const *argv[])
 {
 	testGC();
 	testValue();
+	testLexer();
 	return 0;
 }
