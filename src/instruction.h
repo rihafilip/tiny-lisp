@@ -24,5 +24,7 @@ namespace lisp
 			AP,
 			RTN
 		};
+
+		std::ostream & operator<< ( std::ostream & os, Instruction ins );
 	}
 }
