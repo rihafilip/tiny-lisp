@@ -22,6 +22,7 @@ namespace lisp
 		enum MemoryType
 		{
 			UNDEF, /// not defined
+			EMPTY, /// empty (null) memory block
 			NUM, /// integer
 			STR, /// string
 			CONS, /// cons cell
@@ -75,6 +76,7 @@ namespace lisp
 		static Memory * GetMemory( const std::string & str );
 		static Memory * GetMemory( Memory * car, Memory * cdr );
 		static Memory * GetMemory ( sedc::Instruction instruct);
+		static Memory * GetNull ();
 		/// @}
 
 	private:

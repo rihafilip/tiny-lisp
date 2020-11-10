@@ -15,6 +15,7 @@ namespace lisp
 		static Value String ( const std::string & in);
 		static Value Cons ( Value & car, Value & cdr );
 		static Value Instruction ( sedc::Instruction instruct );
+		static Value Null ();
 		///@}
 		/// Removes itself from roots in GC
 		~Value();

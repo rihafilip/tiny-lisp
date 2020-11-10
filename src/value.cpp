@@ -21,6 +21,11 @@ Value Value::Instruction ( sedc::Instruction instruct )
 	return Value ( GC::GetMemory( instruct ) );
 }
 
+Value Value::Null ()
+{
+	return Value ( GC::GetNull() );
+}
+
 /*********************************************************/
 
 Value::Value( GC::Memory * in )

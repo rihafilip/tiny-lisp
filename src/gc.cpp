@@ -78,6 +78,13 @@ GC::Memory * GC::GetMemory ( sedc::Instruction instruct )
 	return mem;	
 }
 
+GC::Memory * GC::GetNull ()
+{
+	Memory * mem = GetNextEmptyMemory();
+	mem -> type = EMPTY;
+	return mem;
+}
+
 /*******************************************/
 
 void GC::Mark( List * lst )
@@ -156,7 +163,7 @@ bool GC::Memory::operator== ( const Memory & other )
 		case CONS:
 			return ( this -> cons . first == other . cons . first )
 				&& ( this -> cons . second == other . cons . second );
-		// UNDEF
+		// UNDEF, NULL
 		default:
 			return true;
 	}
@@ -170,6 +177,8 @@ std::string lisp::toString ( GC::MemoryType type )
 	{
 		case GC::MemoryType::UNDEF:
 			return "undefined";
+		case GC::MemoryType::EMPTY:
+			return "null";
 		case GC::MemoryType::NUM:
 			return "number";
 		case GC::MemoryType::STR:
