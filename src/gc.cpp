@@ -161,3 +161,25 @@ bool GC::Memory::operator== ( const Memory & other )
 			return true;
 	}
 }
+
+/********************************/
+
+std::string lisp::toString ( GC::MemoryType type )
+{
+	switch (type)
+	{
+		case GC::MemoryType::UNDEF:
+			return "undefined";
+		case GC::MemoryType::NUM:
+			return "number";
+		case GC::MemoryType::STR:
+			return "string";
+		case GC::MemoryType::CONS:
+			return "cons";
+		case GC::MemoryType::INST:
+			return "instruction";
+	}
+
+	// compilator satisfaction
+	return "";
+}

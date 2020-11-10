@@ -134,5 +134,7 @@ namespace lisp
 		
 		/// Return the next available memory block
 		static Memory * GetNextEmptyMemory ();
-	};	
+	};
+
+	std::string toString ( GC::MemoryType type );
 }
