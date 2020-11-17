@@ -62,10 +62,11 @@ Value Lexer::Find ( const std::string & str, Value lst )
 	if ( lst . isNull() )
 		return Value::Null();
 
-	if ( str == lst. car(). sym() )
-		return lst . car();
+	// lst should be list of symbols
+	if ( str == lst . car() -> sym() . value() )
+		return lst . car() . value();
 
-	return Find( str, lst.cdr() );
+	return Find( str, lst . cdr() . value() );
 }
 
 /*******************************************************/

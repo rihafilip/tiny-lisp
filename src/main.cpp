@@ -7,9 +7,9 @@ void testLexer ()
 {
 	GC::Start(1000);
 	Value out =  Lexer::Scan( "( defun (addtwelve x) (+ x 12))" );
-	std::cout << "expression: " << out.car() << std::endl <<std::endl;
-	std::cout << "Built-in: " << out.cdr().car() << std::endl<<std::endl;
-	std::cout << "Tokens: " << out.cdr().cdr() << std::endl<<std::endl;
+	std::cout << "expression: " << *(out.car()) << std::endl <<std::endl;
+	std::cout << "Built-in: " << *(out.cdr()->car()) << std::endl<<std::endl;
+	std::cout << "Tokens: " << *(out.cdr()->cdr()) << std::endl<<std::endl;
 	GC::Stop();
 }
 
@@ -42,25 +42,17 @@ void testValue ()
 	for ( int i = 0; i < 10; ++i )
 	{
 		Value a = Value::Integer( i );
-		std::cout << a.num() << std::endl;
+		std::cout << *(a.num()) << std::endl;
 	}
 
-	bool ex = false;
 	Value b = Value::Integer( 5 );
-	try
-	{
-		std::cout << b.sym() << std::endl;	
-	}
-	catch ( std::runtime_error & e )
-	{
-		ex = true;
-	}
-	assert(ex);
+	std::cerr << "Expected error: ";
+	assert( ! b.sym() );
 
 	for ( int i = 0; i < 3; ++i )
 	{
 		Value a = Value::Symbol( std::string("a") );
-		std::cout << a.sym() << std::endl;
+		std::cout << *(a.sym()) << std::endl;
 	}
 
 	GC::Stop();

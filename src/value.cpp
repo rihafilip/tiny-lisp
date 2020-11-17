@@ -40,55 +40,67 @@ Value::~Value()
 }
 
 /*********************************************************/
-
 void Value::error ( GC::MemoryType expected ) const
 {
-	std::string mess = "Expected ";
-	mess += toString(expected) ;
-	mess += ", got ";
-	mess += toString(memory -> type);
-
-	throw std::runtime_error(mess);
+	std::cerr << "Expected "
+	<< toString(expected)
+	<< ", got "
+	<< toString(memory -> type) << std::endl;
 }
 
 /*********************************************************/
 
-Value Value::car () const
+std::optional<Value> Value::car () const
 {
 	if ( memory -> type != GC::MemoryType::CONS )
+	{
 		error (GC::MemoryType::CONS);
+		return std::nullopt;
+	}
 
 	return Value ( memory -> cons . first );
 }
 
-Value Value::cdr () const
+std::optional<Value> Value::cdr () const
 {
 	if ( memory -> type != GC::MemoryType::CONS )
+	{
 		error (GC::MemoryType::CONS);
+		return std::nullopt;
+	}
 
 	return Value ( memory -> cons . second );
 }
 
-int Value::num () const
+std::optional<int> Value::num () const
 {
 	if ( memory -> type != GC::MemoryType::NUM )
+	{
 		error (GC::MemoryType::NUM);
+		return std::nullopt;
+	}
 
 	return memory -> number;
 }
 
-std::string Value::sym () const
+std::optional<std::string> Value::sym () const
 {
 	if ( memory -> type != GC::MemoryType::SYM )
+	{
 		error (GC::MemoryType::SYM);
+		return std::nullopt;
+	}
 
 	return memory -> name;
 }
 
-sedc::Instruction Value::ins () const
+std::optional<sedc::Instruction> Value::ins () const
 {
 	if ( memory -> type != GC::MemoryType::INST )
+	{
 		error (GC::MemoryType::INST);
+		return std::nullopt;
+	}
 
 	return memory -> instruct;
 }
@@ -115,37 +127,38 @@ Value Value::append ( Value & val )
 	if ( ! isCons() )
 		return Value::Cons( *this, val );
 
-
-	return Value::Cons( car(), cdr() . append( val ) );
+	return Value::Cons( car().value(), cdr() -> append( val ) );
 }
 
 namespace lisp
 {
 	std::ostream & operator<< (std::ostream & os, const Value & val )
 	{
-		if ( val . isNull() )
-			os << "null";
-		else if ( val . isCons() )
-			os << "( " << val.car() << " . " << val.cdr() << " )";
-		else
+		switch ( val . memory -> type)
 		{
-			switch ( val . memory -> type)
-			{
-				case GC::MemoryType::UNDEF:
-					os << "undef";
-					break;
-				case GC::MemoryType::NUM:
-					os << val . num();
-					break;
-				case GC::MemoryType::SYM:
-					os << "\"" << val . sym() << "\"";
-					break;
-				case GC::MemoryType::INST:
-					os << val . ins();
-					break;
-				default:
-					break;
-			}
+			case GC::MemoryType::UNDEF:
+				os << "undef";
+				break;
+
+			case GC::MemoryType::EMPTY:
+				os << "null";
+				break;
+
+			case GC::MemoryType::NUM:
+				os << val . num() . value();
+				break;
+
+			case GC::MemoryType::SYM:
+				os << '"' << val . sym() . value() << '"';
+				break;
+
+			case GC::MemoryType::INST:
+				os << val . ins() . value();
+				break;
+
+			case GC::MemoryType::CONS:
+				os << "( " << val . car() . value() << " . " << val . cdr() . value() << " )";
+				break;
 		}
 
 		return os;

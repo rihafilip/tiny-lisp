@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gc.h"
+#include <optional>
 
 namespace lisp
 {
@@ -28,11 +29,11 @@ namespace lisp
 		 * \defgroup Val_get Value getters
 		 * @{
 		 */
-		Value car () const; 
-		Value cdr () const; 
-		int num () const; 
-		std::string sym () const; 
-		sedc::Instruction ins () const; 
+		std::optional<Value> 				car () const; 
+		std::optional<Value> 				cdr () const; 
+		std::optional<int> 					num () const; 
+		std::optional<std::string> 			sym () const; 
+		std::optional<sedc::Instruction> 	ins () const; 
 		/// @}
 		
 		/// Asks if this value is null
@@ -49,7 +50,7 @@ namespace lisp
 		/// Asigns itself as root in GC
 		Value( GC::Memory * in );
 
-		/// helper error function
+		/// Helper error function, prints to stderr
 		void error ( GC::MemoryType expected ) const;
 		GC::Memory * memory;
 	};
