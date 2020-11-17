@@ -151,7 +151,7 @@ GC::Memory::~Memory()
 void GC::Memory::Mark ()
 {
 	marked = true;
-	// Recursively amrk cons cells
+	// Recursively mark cons cells
 	if ( type == MemoryType::CONS )
 	{
 		this -> cons . first -> Mark();
