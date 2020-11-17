@@ -7,11 +7,15 @@ using namespace lisp;
 GC::List * GC::m_Roots = nullptr;
 GC::List * GC::m_Available = nullptr;
 GC::List * GC::m_All = nullptr;
+GC::Memory * GC::m_Null = nullptr;
 
 /*******************************************/
-// TODO null is all in one node
 void GC::Start ( int howMuch )
 {
+	// allocates null memory ptr
+	m_Null = new Memory();
+	m_Null -> type = EMPTY;
+
 	Allocate ( --howMuch );
 }
 
@@ -32,19 +36,27 @@ void GC::Stop ()
 	delete m_All;
 	delete m_Roots;
 	delete m_Available;
+	delete m_Null;
 
 	m_All = nullptr;
 	m_Roots = nullptr;
 	m_Available = nullptr;
+	m_Null = nullptr;
 }
 
 void GC::AddRoot ( Memory * root )
 {
+	if ( root -> type == EMPTY )
+		return;
+
 	m_Roots = new List( root, m_Roots );
 }
 
 void GC::RemoveRoot( Memory * root )
 {
+	if ( root -> type == EMPTY )
+		return;
+	
 	if ( m_Roots != nullptr )
 		m_Roots = m_Roots -> rm( root );
 }
@@ -86,9 +98,7 @@ GC::Memory * GC::GetMemory ( sedc::Instruction instruct )
 
 GC::Memory * GC::GetNull ()
 {
-	Memory * mem = GetNextEmptyMemory();
-	mem -> type = EMPTY;
-	return mem;
+	return m_Null;
 }
 
 /*******************************************/

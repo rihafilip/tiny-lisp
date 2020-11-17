@@ -133,6 +133,9 @@ namespace lisp
 		/// List of all memory blocks
 		static List * m_All;
 
+		/// Pointer to single null memory representator
+		static Memory * m_Null;
+
 		/// \defgroup GC_proc Garbage collection procedures
 		/// @{
 		static void Collect ();
