@@ -134,7 +134,8 @@ namespace lisp
 
 		/// \defgroup GC_proc Garbage collection procedures
 		/// @{
-		static void Mark( List * lst = m_Roots );
+		static void Collect ();
+		static void Mark ( List * lst = m_Roots );
 		static void Sweep ( List * lst = m_All );
 		/// @}
 		

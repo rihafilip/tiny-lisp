@@ -113,18 +113,21 @@ void GC::Sweep ( List * lst )
 	Sweep ( lst -> next );
 }
 
+void GC::Collect ()
+{
+	Mark();
+	delete m_Available;
+	Sweep();
+	// still no empty memory block, allocate more
+	if ( m_Available == nullptr )
+		Start();
+}
+
 GC::Memory * GC::GetNextEmptyMemory ()
 {
 	// no free memory, need to collect garbage
 	if ( m_Available == nullptr )
-	{
-		Mark();
-		delete m_Available;
-		Sweep();
-		/// still no empty memory block, allocate more
-		if ( m_Available == nullptr )
-			Start();
-	}
+		Collect();
 
 	Memory * ret = m_Available -> memory;
 	List * tmp = m_Available -> next;
