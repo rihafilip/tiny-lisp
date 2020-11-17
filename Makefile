@@ -7,7 +7,7 @@ LD=g++
 LDFLAGS=
 
 CXX=g++
-CXXFLAGS=-Wall -pedantic -Wno-long-long -c -g
+CXXFLAGS=-std=c++17 -Wall -pedantic -Wno-long-long -c -g
 
 all: $(OBJ)
 
