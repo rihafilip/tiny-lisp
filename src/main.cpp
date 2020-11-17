@@ -3,16 +3,6 @@
 #include <stdexcept>
 using namespace lisp;
 
-void testLexer ()
-{
-	GC::Start(1000);
-	Value out =  Lexer::Scan( "( defun (addtwelve x) (+ x 12))" );
-	std::cout << "expression: " << *(out.car()) << std::endl <<std::endl;
-	std::cout << "Built-in: " << *(out.cdr()->car()) << std::endl<<std::endl;
-	std::cout << "Tokens: " << *(out.cdr()->cdr()) << std::endl<<std::endl;
-	GC::Stop();
-}
-
 void testGC ()
 {
 	GC::Start(20);
@@ -42,7 +32,7 @@ void testValue ()
 	for ( int i = 0; i < 10; ++i )
 	{
 		Value a = Value::Integer( i );
-		std::cout << *(a.num()) << std::endl;
+		assert( *(a.num()) == i );
 	}
 
 	Value b = Value::Integer( 5 );
@@ -52,9 +42,19 @@ void testValue ()
 	for ( int i = 0; i < 3; ++i )
 	{
 		Value a = Value::Symbol( std::string("a") );
-		std::cout << *(a.sym()) << std::endl;
+		assert( *(a.sym()) == "a");
 	}
 
+	GC::Stop();
+}
+
+void testLexer ()
+{
+	GC::Start();
+	Value out = Lexer::Scan( "( defun (addtwelve x) (+ x 12))" );
+	std::cout << "expression: " << *(out.car()) << std::endl <<std::endl;
+	std::cout << "Built-in: " << *(out.cdr()->car()) << std::endl<<std::endl;
+	std::cout << "Tokens: " << *(out.cdr()->cdr()) << std::endl<<std::endl;
 	GC::Stop();
 }
 
