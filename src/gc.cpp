@@ -10,15 +10,20 @@ GC::List * GC::m_All = nullptr;
 
 /*******************************************/
 // TODO null is all in one node
-void GC::Start ( int todo )
+void GC::Start ( int howMuch )
 {
-	if ( ! todo )
+	Allocate ( --howMuch );
+}
+
+void GC::Allocate ( int howMuch )
+{
+	if ( ! howMuch )
 		return;
 
 	Memory * mem = new Memory();
 	m_All = new List ( mem, m_All );
 	m_Available = new List ( mem, m_Available );
-	Start ( --todo );
+	Allocate ( --howMuch );
 }
 
 void GC::Stop ()
@@ -120,7 +125,7 @@ void GC::Collect ()
 	Sweep();
 	// still no empty memory block, allocate more
 	if ( m_Available == nullptr )
-		Start();
+		Allocate();
 }
 
 GC::Memory * GC::GetNextEmptyMemory ()
