@@ -96,7 +96,9 @@ namespace lisp
 			{}
 
 			~List()
-			{ delete next; }
+			{
+				delete next;
+			}
 
 			/// Cleans memory blocks
 			void clean ()

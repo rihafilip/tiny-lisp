@@ -148,7 +148,10 @@ void GC::Sweep ( List * lst )
 	if ( ! lst -> memory -> marked )
 	{
 		if ( lst -> memory -> type == SYM )
+		{
 			delete[] lst -> memory -> name;
+			lst -> memory -> type = UNDEF;
+		}
 		// prepend to m_Available;
 		m_Available = new List ( lst -> memory, m_Available );
 	}
@@ -160,6 +163,7 @@ void GC::Collect ()
 {
 	Mark();
 	delete m_Available;
+	m_Available = nullptr;
 	Sweep();
 	// still no empty memory block, allocate more
 	if ( m_Available == nullptr )
