@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "tokens.h"
 
 #include <cctype>
 
@@ -6,54 +7,10 @@ using namespace lisp;
 
 Value Lexer::Scan( const std::string & str )
 {
-	std::vector<const char *> vec = 
-	{
-		"(",
-		")",
-		";",
-		"`",
-		",",
-		".",
-		"+",
-		"-",
-		"*",
-		"/",
-		"eq",
-    	"<",
-    	">",
-    	"print",
-    	"read",
-    	"if",
-    	"lambda",
-    	"quote",
-    	"apply",
-    	"cons",
-    	"car",
-    	"cdr",
-    	"consp",
-    	"defun",
-    	"let",
-    	"t",
-    	"'",
-    	""
-	};
-
-	// transforms vector into list
-	std::function<Value()> makeList = 
-		[ &vec, &makeList ] () mutable -> Value
-		{
-			if ( vec . empty() )
-				return Value::Null();
-
-			Value nextVal = Value::Symbol( vec . back() );
-			vec . pop_back();
-			return Value::Cons( nextVal, makeList() );
-		};
-
 	// Vector is used as a stack, so string is loaded to it back to front
 	std::vector<char> stringVector ( str.rbegin(), str.rend() );
 
-	Lexer lexer ( stringVector, makeList() );
+	Lexer lexer ( stringVector, tokens::makeList() );
 	return lexer . begin();
 }
 
