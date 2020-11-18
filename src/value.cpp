@@ -39,6 +39,20 @@ Value::~Value()
 	GC::RemoveRoot ( memory );
 }
 
+Value::Value ( const Value & src )
+{
+	this -> memory = src.memory;
+	GC::AddRoot( this -> memory );
+}
+
+Value & Value::operator= ( const Value & src )
+{
+	GC::RemoveRoot ( this -> memory );
+	this -> memory = src.memory;
+	GC::AddRoot( this -> memory );
+	return *this;
+}
+
 /*********************************************************/
 void Value::error ( GC::MemoryType expected ) const
 {
@@ -146,7 +160,7 @@ namespace lisp
 
 void Value::print ( std::ostream & os, bool inList ) const
 {
-	switch ( memory -> type)
+	switch ( memory -> type )
 	{
 		case GC::MemoryType::UNDEF:
 			os << "undef";

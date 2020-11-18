@@ -13,6 +13,14 @@ namespace lisp
 	{
 	public:
 		/**
+		 * \defgroup Val_ass Value assignement operators
+		 * @{
+		 */		
+		Value (const Value & src); 
+		Value & operator= (const Value & src); 
+		/// @}
+		
+		/**
 		 * \defgroup Val_cons Value constructors
 		 * @{
 		 */		
