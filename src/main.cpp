@@ -48,13 +48,14 @@ void testValue ()
 	GC::Stop();
 }
 
+// TODO test comments, negative numbers
 void testLexer ()
 {
 	GC::Start();
 	Value out = Lexer::Scan( "( defun (addtwelve x) (+ x 12))" );
-	std::cout << "expression: " << *(out.car()) << std::endl <<std::endl;
-	std::cout << "Built-in: " << *(out.cdr()->car()) << std::endl<<std::endl;
-	std::cout << "Tokens: " << *(out.cdr()->cdr()) << std::endl<<std::endl;
+	std::cout << "expression: " << out << std::endl << std::endl;
+	//std::cout << "Built-in: " << *(out.cdr()->car()) << std::endl<<std::endl;
+	//std::cout << "Tokens: " << *(out.cdr()) << std::endl<<std::endl;
 	GC::Stop();
 }
 

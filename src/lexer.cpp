@@ -1,6 +1,5 @@
 #include "lexer.h"
 
-#include <vector>
 #include <cctype>
 
 using namespace lisp;
@@ -51,84 +50,124 @@ Value Lexer::Scan( const std::string & str )
 			return Value::Cons( nextVal, makeList() );
 		};
 
-	std::stringstream ss (str);
-	return Scan ( ss, Value::Null(), makeList(), Value::Null() );
+	// Vector is used as a stack, so string is loaded to it back to front
+	std::vector<char> stringVector ( str.rbegin(), str.rend() );
+
+	Lexer lexer ( stringVector, makeList() );
+	return lexer . begin();
 }
 
 /*******************************************************/
 
-Value Lexer::Find ( const std::string & str, Value lst )
-{
-	if ( lst . isNull() )
-		return Value::Null();
-
-	// lst should be list of symbols
-	if ( str == lst . car() -> sym() . value() )
-		return lst . car() . value();
-
-	return Find( str, lst . cdr() . value() );
-}
+Lexer::Lexer( std::vector<char> vec, Value built_in )
+: m_Stack (vec)
+, m_BuiltIn (built_in)
+{}
 
 /*******************************************************/
 
-Value Lexer::Scan ( std::stringstream & ss, Value expression, Value built_in, Value tokens )
+Value Lexer::begin ()
 {
-	if ( skipSpace(ss) . eof() )
-		return Value::Cons( expression, Value::Cons( built_in, tokens ) );
+	skipSpace();
+	return evaluate ( nextToken(), Value::Null() );
+}
 
-	std::string str = getNext( ss );
-
-	Value found = Value::Null();
-
-	// number
-	if ( isdigit ( str . front() ) )
-		found = Value::Integer( std::stoi(str) );
-
-	// built-in symbol	
-	else if ( ! ( found = Find ( str, built_in )) . isNull() )
-		;
-
-	// custom symbol
-	else if ( ( found = Find ( str, tokens ) ) . isNull() )
+Value Lexer::evaluate ( std::optional<Value> optionalValue, Value acc )
+{
+	if ( ! optionalValue )
 	{
-		found = Value::Symbol( str );
-		tokens = Value::Cons ( found, tokens );
+		if ( m_Stack . empty() )
+			return acc;
+		else
+		{
+			std::cerr << "Wrong input.";
+			return Value::Null();
+		}
 	}
 
-	return Scan( ss, expression . append(found), built_in, tokens );
+	Value val = optionalValue . value();
+
+	skipSpace();
+	return evaluate ( nextToken(), acc . append( val ) );
 }
 
 /*******************************************************/
 
-std::string Lexer::getNext ( std::stringstream & ss )
+// input 	:= [whitespace] [ token | comment ]*
+// token 	:= number | string | symbol
+// number 	:= -?[0-9]+
+// string	:= [a-Z][a-Z|0-9]*
+// symbol 	:= in "built-in" list
+// comment	:= ; [^\n]* \n
+std::optional<Value> Lexer::nextToken()
 {
+	if ( m_Stack . empty() )
+		return std::nullopt;
 
-	char ch = skipSpace( ss ) . get();
+	char ch = pop();
 	std::string str;
 	str += ch;
 	
-	// letter => word
+	// word
 	if ( isalpha( ch ) )
-		return getWord( ss, str, isalpha );
+		return Value::Symbol( restOfToken ( isalnum, str ));
 
-	// digit or minus => number
-	else if ( isdigit( ch ) )
-		return getWord( ss, str, isdigit );
+	// number
+	else if (
+		isdigit( ch )
+		|| ( ch == '-' && ! m_Stack . empty() && isdigit( m_Stack . back() ) )
+	)
+		return Value::Integer( std::stoi ( restOfToken ( isdigit, str )));
+
+	// comment
+	// ignores ouptut until \n
+	else if ( ch == ';' )
+	{
+		restOfToken(
+			[] ( int in ) -> int
+			{ return in != '\n'; },
+			str
+		);
+		return nextToken();
+	}
 	
-	return str;
+	// otherwise built in symbol
+	// TODO signalize bad input
+	return isBuiltIn( str, m_BuiltIn );
 }
 
-std::string Lexer::getWord ( std::stringstream & ss, std::string acc, std::function<int(int)> comp )
+std::string Lexer::restOfToken( std::function<int(int)> comp, std::string acc )
 {
-	if ( ss.eof() || ! comp( ss.peek() ) )
+	// empty stack or not a symbol of this token
+	if ( m_Stack . empty()
+		|| ! comp( m_Stack . back() )
+	)
 		return acc;
 
-	char ch = ss.get();
-	return getWord( ss, acc += ch, comp );
+	return restOfToken( comp, acc += pop() );
 }
 
-std::stringstream & Lexer::skipSpace( std::stringstream & ss )
+/*******************************************************/
+
+std::optional<Value> Lexer::isBuiltIn ( std::string str, Value lst )
 {
-	getWord( ss, std::string(), isspace );
-	return ss;
+	if ( lst . isNull() )
+		return std::nullopt;
+
+	if ( lst . car() -> sym() . value() == str )
+		return lst . car() . value();
+
+	return isBuiltIn ( str, lst . cdr() . value() );
+}
+
+void Lexer::skipSpace()
+{
+	restOfToken( isspace, std::string() );
+}
+
+char Lexer::pop()
+{
+	char ch = m_Stack . back();
+	m_Stack . pop_back();
+	return ch;
 }
