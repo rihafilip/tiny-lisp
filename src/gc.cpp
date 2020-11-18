@@ -53,12 +53,40 @@ void GC::AddRoot ( Memory * root )
 }
 
 void GC::RemoveRoot( Memory * root )
-{
+{	
+	// roots are deleted
+	if ( m_Roots == nullptr )
+		return;
+
 	if ( root -> type == EMPTY )
 		return;
 	
-	if ( m_Roots != nullptr )
-		m_Roots = m_Roots -> rm( root );
+	RemoveRoot ( root, m_Roots );
+}
+
+void GC::RemoveRoot( Memory * mem, List * current, List * prev )
+{
+	// not found
+	if ( current == nullptr )
+		return;
+
+	// found
+	if ( current -> memory == mem )
+	{
+		// no previous => current == m_Roots
+		if ( ! prev )
+			m_Roots = current -> next;
+		else
+			prev -> next = current -> next;
+
+		// prevent recursive delete
+		current -> next = nullptr;
+		delete current;
+		return;
+	}
+
+	// find in next
+	RemoveRoot( mem, current -> next, current );
 }
 
 /*******************************************/

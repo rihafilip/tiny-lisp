@@ -105,22 +105,6 @@ namespace lisp
 				if ( next != nullptr )
 					next -> clean();
 			}
-			/// Removes node with corresponding memory block form list
-			List * rm ( Memory * mem )
-			{
-				if ( *(this -> memory) == *mem )
-				{
-					List * tmp = next;
-					next = nullptr;
-					delete this;
-					return tmp;
-				}
-
-				if ( next != nullptr )
-					next = next -> rm (mem);
-
-				return this;
-			}
 
 			Memory * memory;
 			List * next;
@@ -143,6 +127,9 @@ namespace lisp
 		static void Sweep ( List * lst = m_All );
 		/// @}
 		
+		/// Finds memory block in list and deletes it
+		static void RemoveRoot( Memory * mem, List * current, List * prev = nullptr );
+
 		/// Return the next available memory block
 		static Memory * GetNextEmptyMemory ();
 	};
