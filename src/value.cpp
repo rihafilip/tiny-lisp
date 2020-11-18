@@ -11,7 +11,7 @@ Value Value::Symbol ( const std::string & in )
 	return Value ( GC::GetMemory( in ) );
 }
 
-Value Value::Cons ( Value car, Value cdr )
+Value Value::Cons ( const Value & car, const Value & cdr )
 {
 	return Value ( GC::GetMemory( car.memory, cdr.memory ) );
 }
@@ -133,7 +133,7 @@ bool Value::isCons () const
 
 /*********************************************************/
 
-Value Value::append ( Value val )
+Value Value::append ( const Value & val )
 {
 	if ( isNull() )
 		return val;

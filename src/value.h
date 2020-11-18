@@ -26,7 +26,7 @@ namespace lisp
 		 */		
 		static Value Integer ( int num );
 		static Value Symbol ( const std::string & in);
-		static Value Cons ( Value car, Value cdr );
+		static Value Cons ( const Value & car, const Value & cdr );
 		static Value Instruction ( sedc::Instruction instruct );
 		static Value Null ();
 		///@}
@@ -50,7 +50,7 @@ namespace lisp
 		bool isCons () const; 
 
 		/// If this is cons, it returns this with appended val
-		Value append ( Value val );
+		Value append ( const Value & val );
 
 		friend std::ostream & operator<< (std::ostream & os, const Value & val );
 
