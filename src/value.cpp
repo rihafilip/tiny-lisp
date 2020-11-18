@@ -133,37 +133,66 @@ Value Value::append ( Value val )
 	return Value::Cons( car().value(), cdr() -> append( val ) );
 }
 
+/*********************************************************/
+
 namespace lisp
 {
 	std::ostream & operator<< (std::ostream & os, const Value & val )
 	{
-		switch ( val . memory -> type)
-		{
-			case GC::MemoryType::UNDEF:
-				os << "undef";
-				break;
-
-			case GC::MemoryType::EMPTY:
-				os << "null";
-				break;
-
-			case GC::MemoryType::NUM:
-				os << val . num() . value();
-				break;
-
-			case GC::MemoryType::SYM:
-				os << '"' << val . sym() . value() << '"';
-				break;
-
-			case GC::MemoryType::INST:
-				os << val . ins() . value();
-				break;
-
-			case GC::MemoryType::CONS:
-				os << "( " << val . car() . value() << " . " << val . cdr() . value() << " )";
-				break;
-		}
-
+		val . print ( os );
 		return os;
+	}
+}
+
+void Value::print ( std::ostream & os, bool inList ) const
+{
+	switch ( memory -> type)
+	{
+		case GC::MemoryType::UNDEF:
+			os << "undef";
+			break;
+
+		case GC::MemoryType::EMPTY:
+			os << "null";
+			break;
+
+		case GC::MemoryType::NUM:
+			os << num() . value();
+			break;
+
+		case GC::MemoryType::SYM:
+			os << sym() . value();
+			break;
+
+		case GC::MemoryType::INST:
+			os << ins() . value();
+			break;
+
+		case GC::MemoryType::CONS:
+			if ( ! inList )
+				os << "( ";
+
+			if ( cdr() -> isNull() ) // end of list
+			{
+				car() -> print (os, true);
+			}
+
+			else if ( cdr() -> isCons() )
+			{
+				car() -> print (os, true);
+				os << " ";
+				cdr() -> print (os, true);
+			}
+
+			else
+			{
+				car() -> print (os, true);
+			 	os << " . ";
+			 	cdr() -> print (os, true);
+			}
+
+			if ( ! inList )
+				os << " )";
+			break;
 	}
 }
