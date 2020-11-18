@@ -8,44 +8,38 @@ using namespace lisp;
 Value Lexer::Scan( const std::string & str )
 {
 	// Vector is used as a stack, so string is loaded to it back to front
-	std::vector<char> stringVector ( str.rbegin(), str.rend() );
+	vStack stringVector ( str.rbegin(), str.rend() );
 
-	Lexer lexer ( stringVector, tokens::makeList() );
-	return lexer . begin();
+	Lexer lexer ( tokens::makeList() );
+	return lexer . begin ( stringVector );
 }
 
 /*******************************************************/
 
-Lexer::Lexer( std::vector<char> vec, Value built_in )
-: m_Stack (vec)
-, m_BuiltIn (built_in)
+Lexer::Lexer( Value builtin )
+: m_Tokens ( builtin )
 {}
 
 /*******************************************************/
 
-Value Lexer::begin ()
+Value Lexer::begin ( vStack stack )
 {
-	skipSpace();
-	return evaluate ( nextToken(), Value::Null() );
+	return evaluate ( nextToken( skipSpace(stack) ), Value::Null() );
 }
 
-Value Lexer::evaluate ( std::optional<Value> optionalValue, Value acc )
+Value Lexer::evaluate ( std::pair<std::optional<Value>, vStack> pair , Value acc )
 {
-	if ( ! optionalValue )
-	{
-		if ( m_Stack . empty() )
-			return acc;
-		else
-		{
-			std::cerr << "Wrong input.";
-			return Value::Null();
-		}
-	}
+	auto [ optional, stack ] = pair;
 
-	Value val = optionalValue . value();
+	if ( ! optional )
+		// reached eof?
+		return stack . empty() ? acc : Value::Null();
 
-	skipSpace();
-	return evaluate ( nextToken(), acc . append( val ) );
+	Value val = optional . value();
+
+	return evaluate (
+		nextToken( skipSpace(stack) ),
+		acc . append( val ) );
 }
 
 /*******************************************************/
@@ -53,60 +47,102 @@ Value Lexer::evaluate ( std::optional<Value> optionalValue, Value acc )
 // input 	:= [whitespace] [ token | comment ]*
 // token 	:= number | string | symbol
 // number 	:= -?[0-9]+
-// string	:= [a-Z][a-Z|0-9]*
+// string	:= [a-Z] [ a-Z | 0-9 ]*
 // symbol 	:= in "built-in" list
 // comment	:= ; [^\n]* \n
-std::optional<Value> Lexer::nextToken()
+std::pair<std::optional<Value>, vStack> Lexer::nextToken( vStack stack )
 {
-	if ( m_Stack . empty() )
-		return std::nullopt;
+	if ( stack . empty() )
+		return std::make_pair(std::nullopt, stack);
 
-	char ch = pop();
+	char ch = stack . back();
+	stack . pop_back();
+
 	std::string str;
 	str += ch;
-	
+		
 	// word
 	if ( isalpha( ch ) )
-		return Value::Symbol( restOfToken ( isalnum, str ));
+		return makeSymbol( restOfToken ( stack, isalnum, str ));
 
 	// number
 	else if (
 		isdigit( ch )
-		|| ( ch == '-' && ! m_Stack . empty() && isdigit( m_Stack . back() ) )
+		||  ( ch == '-' 					// negative number
+			&& ! stack . empty() 			// can extract
+			&& isdigit( stack . back() ) ) 	// after minus is digit
 	)
-		return Value::Integer( std::stoi ( restOfToken ( isdigit, str )));
+		return makeNumber( restOfToken ( stack, isdigit, str ));
 
 	// comment
-	// ignores ouptut until \n
+	// ignores output until \n
 	else if ( ch == ';' )
 	{
-		restOfToken(
-			[] ( int in ) -> int
-			{ return in != '\n'; },
+		stack = restOfToken(
+			stack,
+			[] ( int in ) -> int { return in != '\n'; },
 			str
-		);
-		return nextToken();
+		) . second;
+
+		// skipSpace consumes the trailing \n
+		return nextToken( skipSpace(stack) );
 	}
 	
 	// otherwise built in symbol
-	// TODO signalize bad input
-	return isBuiltIn( str, m_BuiltIn );
+	std::optional<Value> ret = isToken( str );
+
+	// if not built-in symbol, it fails
+	if ( ! ret )
+	{
+		std::cerr << "\"" << str << "\" is not a token." << std::endl;
+		return std::make_pair( std::nullopt, vStack {'f'} ); // dummy stack, is not empty
+	}
+
+	return std::make_pair( ret, stack );
 }
 
-std::string Lexer::restOfToken( std::function<int(int)> comp, std::string acc )
+std::pair<std::string, vStack> Lexer::restOfToken( vStack stack, std::function<int(int)> comp, std::string acc )
 {
 	// empty stack or not a symbol of this token
-	if ( m_Stack . empty()
-		|| ! comp( m_Stack . back() )
+	if ( stack . empty()
+		|| ! comp( stack . back() )
 	)
-		return acc;
+		return std::make_pair(acc, stack);
 
-	return restOfToken( comp, acc += pop() );
+	char ch = stack . back();
+	stack . pop_back();
+	return restOfToken( stack, comp, acc += ch );
 }
 
 /*******************************************************/
 
-std::optional<Value> Lexer::isBuiltIn ( std::string str, Value lst )
+std::pair<std::optional<Value>, vStack> Lexer::makeNumber ( std::pair<std::string, vStack> pair )
+{
+	auto [str, stack] = pair;
+	Value val = Value::Integer( std::stoi ( str ) );
+	return std::make_pair(val, stack);
+}
+
+std::pair<std::optional<Value>, vStack> Lexer::makeSymbol ( std::pair<std::string, vStack> pair )
+{
+	auto [str, stack] = pair;
+	Value val = Value::Symbol( str );
+	return std::make_pair(val, stack);
+}
+
+vStack Lexer::skipSpace( vStack stack )
+{
+	return restOfToken( stack, isspace, std::string() ) . second;
+}
+
+/*******************************************************/
+
+std::optional<Value> Lexer::isToken ( std::string str )
+{
+	return isToken( str, m_Tokens );
+}
+
+std::optional<Value> Lexer::isToken ( std::string str, Value lst )
 {
 	if ( lst . isNull() )
 		return std::nullopt;
@@ -114,17 +150,5 @@ std::optional<Value> Lexer::isBuiltIn ( std::string str, Value lst )
 	if ( lst . car() -> sym() . value() == str )
 		return lst . car() . value();
 
-	return isBuiltIn ( str, lst . cdr() . value() );
-}
-
-void Lexer::skipSpace()
-{
-	restOfToken( isspace, std::string() );
-}
-
-char Lexer::pop()
-{
-	char ch = m_Stack . back();
-	m_Stack . pop_back();
-	return ch;
+	return isToken ( str, lst . cdr() . value() );
 }

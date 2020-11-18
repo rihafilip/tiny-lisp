@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "tokens.h"
 #include <cassert>
 #include <stdexcept>
 using namespace lisp;
@@ -27,7 +28,7 @@ void testGC ()
 
 void testValue ()
 {
-	GC::Start();
+	GC::Start(2);
 
 	for ( int i = 0; i < 10; ++i )
 	{
@@ -42,20 +43,24 @@ void testValue ()
 	for ( int i = 0; i < 3; ++i )
 	{
 		Value a = Value::Symbol( std::string("a") );
-		assert( *(a.sym()) == "a");
+		assert( *(a.sym()) == "a");		
 	}
 
+	assert ( *(b.num()) == 5 );
 	GC::Stop();
 }
 
-// TODO test comments, negative numbers
 void testLexer ()
 {
 	GC::Start();
 	Value out = Lexer::Scan( "( defun (addtwelve x) (+ x 12))" );
 	std::cout << "expression: " << out << std::endl << std::endl;
-	//std::cout << "Built-in: " << *(out.cdr()->car()) << std::endl<<std::endl;
-	//std::cout << "Tokens: " << *(out.cdr()) << std::endl<<std::endl;
+
+	out = Lexer::Scan( "( + 1 -2 ;------ 1 + 2 \n )" );
+	std::cout << "expression: " << out << std::endl << std::endl;
+
+	out = Lexer::Scan( "(((((((((((((((((((((((((((((((((())))))))))))))))))))))))))))))))))" );
+	std::cout << "expression: " << out << std::endl << std::endl;
 	GC::Stop();
 }
 

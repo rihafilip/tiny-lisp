@@ -7,43 +7,58 @@
 
 namespace lisp
 {
+	typedef std::vector<char> vStack;
+
 	class Lexer
 	{
 	public:
-		/// Returns tokenized expression, its tokens and built_in tokens
-		/// ( tokens . ( built_in_tokens . tokens ) )
+		/// Returns tokenized expression form string
 		static Value Scan( const std::string & str );
+
 	private:
 		/// Constructor for lexer class, constructed by Scan
-		Lexer( std::vector<char> vec, Value built_in );
+		Lexer( Value builtin );
 
-		/// Starts tokenizing
-		Value begin ();
-		/// Evaluates the tokens
-		Value evaluate ( std::optional<Value> optionalValue, Value acc );
+		Value begin ( vStack stack );
 
-		/// Returns the next token in stack
-		std::optional<Value> nextToken();
+		/**
+		 * Evaluates the tokens
+		 * @param  pair First is last token, second is rest of stack
+		 * @param  acc  Accumulator of return value
+		 * @return      Tokenized expression
+		 */
+		Value evaluate ( std::pair<std::optional<Value>, vStack> pair , Value acc );
+
+		/**
+		 * Returns the next token in stack
+		 * @param  stack stack to pull form
+		 * @return  	    First is token or empty if there is none, second is rest of stack
+		 */
+		std::pair<std::optional<Value>, vStack> nextToken( vStack stack );
+
 		/**
 		 * Returns the rest of token that satisfies comp
-		 * @param  comp comparator to be satisfied
-		 * @param  acc  string accumulator, return value
-		 * @return      string of the whole token
+		 * @param  stack stack to pull form
+		 * @param  comp  comparator to be satisfied
+		 * @param  acc   string accumulator, return value
+		 * @return       string of the whole token
 		 */
-		std::string restOfToken( std::function<int(int)> comp, std::string acc );
+		std::pair<std::string, vStack> restOfToken( vStack stack, std::function<int(int)> comp, std::string acc );
 
-		/// Tries to find the input string in built-in tokens
-		/// @return Value if fnound, empty optional otherwise
-		std::optional<Value> isBuiltIn ( std::string str, Value lst);
-		/// Pops all whitespace characters form stack
-		void skipSpace();
-		/// Helper function that pops the next token in stack and returns it
-		char pop ();
+		/// Makes Integer Value from string, returns it with untouched stack
+		static std::pair<std::optional<Value>, vStack> makeNumber ( std::pair<std::string, vStack> pair );
+		/// Makes Symbol Value from string, returns it with untouched stack
+		static std::pair<std::optional<Value>, vStack> makeSymbol ( std::pair<std::string, vStack> pair );
 
-		/// Stack where is the rest of expression
-		std::vector<char> m_Stack;
+		/// Return stack without leading whitespaces
+		vStack skipSpace( vStack stack );
 
 		/// built-in tokens (brackets, quotes, 'defun' etc.)
-		Value m_BuiltIn;
+		Value m_Tokens;
+
+		/// Tries to find the input string in built-in tokens
+		/// @return Value if found, empty optional otherwise
+		std::optional<Value> isToken ( std::string str );
+		std::optional<Value> isToken ( std::string str, Value lst );
 	};
 }
