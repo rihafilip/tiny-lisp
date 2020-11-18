@@ -42,7 +42,7 @@ namespace lisp
 		bool isCons () const; 
 
 		/// If this is cons, it returns this with appended val
-		Value append (Value & val);
+		Value append ( Value val );
 
 		friend std::ostream & operator<< (std::ostream & os, const Value & val );
 

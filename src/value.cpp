@@ -119,13 +119,16 @@ bool Value::isCons () const
 
 /*********************************************************/
 
-Value Value::append ( Value & val )
+Value Value::append ( Value val )
 {
 	if ( isNull() )
 		return val;
 
 	if ( ! isCons() )
-		return Value::Cons( *this, val );
+		return Value::Cons( *this, Value::Cons( val, Value::Null() ) );
+
+	if ( cdr() . value() . isNull() )
+		return Value::Cons( car().value(), Value::Cons( val, Value::Null() ) );
 
 	return Value::Cons( car().value(), cdr() -> append( val ) );
 }
