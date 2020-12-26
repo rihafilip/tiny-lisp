@@ -66,10 +66,11 @@ void testLexer ()
 void testParser()
 {
 	GC::Start();
-	std::cout << Parser::Parse( Lexer::Scan( "( + 1 2 )" ) ) << std::endl;
+	std::cout << Parser::Parse( Lexer::Scan( "( + 1 2 )" ) ) << std::endl << std::endl;
+	std::cout << Parser::Parse( Lexer::Scan( "(car ( + 1 2 ))" ) ) << std::endl << std::endl;
+	std::cout << "Expected error: ";
+	Parser::Parse( Lexer::Scan( "( car ' (1 2 3 )" ) );
 	std::cout << std::endl;
-	Value out = Parser::Parse( Lexer::Scan( "(car ( + 1 2 ))" ) );
-	std::cout << out << std::endl;
 	GC::Stop();
 }
 

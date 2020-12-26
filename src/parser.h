@@ -21,8 +21,10 @@ namespace lisp
 
 		Parser ( const Value & vinput );
 
-		Value Process ();
-		Value Item ();
-		Value List ();
+		std::optional<Value> Process ();
+		std::optional<Value> Item ();
+		std::optional<Value> List ();
+
+		std::optional<Value> error ( const std::string & message );
 	};
 }

@@ -17,7 +17,7 @@ LIST 	:= ITEM LIST
 Value Parser::Parse ( const Value & tokens )
 {
 	Parser p ( tokens );
-	return p.Process();
+	return p.Process().value_or( Value::Null() );
 }
 
 Parser::Parser( const Value & vinput  )
@@ -31,23 +31,25 @@ Parser::Parser( const Value & vinput  )
 	};
 }
 
-Value Parser::Process ()
+std::optional<Value> Parser::Process ()
 {
 	if ( input.empty() )
 		return Value::Null();
 
-	Value next = Item();
-	return Value::Cons( next, Process() );
+	std::optional<Value> car = Item();
+	std::optional<Value> cdr = Process();
+
+	if ( car && cdr )
+		return Value::Cons( *car, *cdr );
+	else
+		return std::nullopt;
 }
 
-Value Parser::Item ()
+std::optional<Value> Parser::Item ()
 {
 	// unexpected EOF
 	if ( input.empty() )
-	{
-		std::cerr << "Unexpected EOF." << std::endl;
-		return Value::Null();
-	}
+		return error("Unexpected EOF.");
 
 	Value next = input.top();
 
@@ -62,7 +64,12 @@ Value Parser::Item ()
 		if ( syntaxSugar.count( str ) )
 		{
 			Value car = Value::Symbol( syntaxSugar[str] );
-			return Value::Cons( car, Item() );
+			std::optional<Value> cdr = Item();
+
+			if ( cdr )
+				return Value::Cons( car, *cdr );
+			else
+				return std::nullopt;
 		}
 
 		// plain symbol
@@ -77,18 +84,14 @@ Value Parser::Item ()
 	}
 
 	// Invalid type of input, shouldn't occur
-	std::cerr << "Invalid item in parser." << std::endl;
-	return Value::Null();
+	return error( "Invalid token in parser." );
 }
 
-Value Parser::List ()
+std::optional<Value> Parser::List ()
 {
 	// ERROR, should at least be ')'
 	if ( input.empty() )
-	{
-		std::cerr << "Unexpected EOF." << std::endl;
-		return Value::Null();
-	}
+		return error ( "Unexpected EOF." );
 
 	Value top = input.top();
 	if ( top.isSym() )
@@ -104,19 +107,28 @@ Value Parser::List ()
 		else if ( top.sym().value() == "." )
 		{
 			input = input.pop();
-			Value next = Item();
+			std::optional<Value> next = Item();
+			if ( ! next )
+				return std::nullopt;
 
 			top = input.top();
 			if ( ! top.isSym() || top.sym().value() != ")" )
-			{
-				std::cerr << "Expected ')' after cons." << std::endl;
-				// TODO ERROR
-				return Value::Null();
-			}
+				return error( "Expected ')' after cons." );
 		}
 	}
 
-	Value next = Item();
-	return Value::Cons( next, List() );
+	std::optional<Value> car = Item();
+	std::optional<Value> cdr = List();
+	if ( car && cdr )
+		return Value::Cons( *car, *cdr );
+	else
+		return std::nullopt;
+
 }
 
+std::optional<Value> Parser::error ( const std::string & message )
+{
+	std::cerr << message << std::endl;
+	input = Stack( Value::Null() );
+	return std::nullopt;
+}
