@@ -36,6 +36,9 @@ namespace lisp
 		/// Asks if this value is cons
 		bool isCons ();
 
+		/// If this is cons, it returns this with appended val
+		Value append (Value & val);
+
 	private:
 		/// Asigns itself as root in GC
 		Value( GC::Memory * in );
