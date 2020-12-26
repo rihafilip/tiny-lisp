@@ -1,5 +1,4 @@
-#include "lexer.h"
-#include "tokens.h"
+#include "parser.h"
 #include <cassert>
 #include <stdexcept>
 using namespace lisp;
@@ -64,10 +63,21 @@ void testLexer ()
 	GC::Stop();
 }
 
+void testParser()
+{
+	GC::Start();
+	std::cout << Parser::Parse( Lexer::Scan( "( + 1 2 )" ) ) << std::endl;
+	std::cout << std::endl;
+	Value out = Parser::Parse( Lexer::Scan( "(car ( + 1 2 ))" ) );
+	std::cout << out << std::endl;
+	GC::Stop();
+}
+
 int main(int argc, char const *argv[])
 {
 	testGC();
 	testValue();
 	testLexer();
+	testParser();
 	return 0;
 }
