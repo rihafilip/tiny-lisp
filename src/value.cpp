@@ -173,7 +173,7 @@ namespace lisp
 	}
 }
 
-void Value::print ( std::ostream & os, bool inList ) const
+void Value::print ( std::ostream & os ) const
 {
 	switch ( memory -> type )
 	{
@@ -190,7 +190,7 @@ void Value::print ( std::ostream & os, bool inList ) const
 			break;
 
 		case GC::MemoryType::SYM:
-			os << sym() . value();
+			os << '\'' << sym() . value() << '\'';
 			break;
 
 		case GC::MemoryType::INST:
@@ -198,30 +198,13 @@ void Value::print ( std::ostream & os, bool inList ) const
 			break;
 
 		case GC::MemoryType::CONS:
-			if ( ! inList )
-				os << "( ";
+			os << "( ";
+			
+			car() -> print (os);
+		 	os << " ";
+		 	cdr() -> print (os);
 
-			if ( cdr() -> isNull() ) // end of list
-			{
-				car() -> print (os, true);
-			}
-
-			else if ( cdr() -> isCons() )
-			{
-				car() -> print (os, true);
-				os << " ";
-				cdr() -> print (os, true);
-			}
-
-			else
-			{
-				car() -> print (os, true);
-			 	os << " . ";
-			 	cdr() -> print (os, true);
-			}
-
-			if ( ! inList )
-				os << " )";
+			os << " )";
 			break;
 	}
 }
