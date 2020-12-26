@@ -4,6 +4,10 @@
 
 namespace lisp
 {
+	/**
+	 * Abstraction above raw memory data
+	 * Represents integer, cons cell, null list, string or sedc Instruction
+	 */
 	class Value
 	{
 	public:
