@@ -148,7 +148,7 @@ bool Value::isIns () const
 
 /*********************************************************/
 
-Value Value::append ( const Value & val )
+Value Value::append ( const Value & val ) const
 {
 	if ( isNull() )
 		return val;

@@ -56,7 +56,7 @@ namespace lisp
 		/// @}
 
 		/// If this is cons, it returns this with appended val
-		Value append ( const Value & val );
+		Value append ( const Value & val ) const;
 
 		friend std::ostream & operator<< (std::ostream & os, const Value & val );
 
