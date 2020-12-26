@@ -118,3 +118,36 @@ Value Value::append ( Value & val )
 
 	return Value::Cons( car(), cdr() . append( val ) );
 }
+
+namespace lisp
+{
+	std::ostream & operator<< (std::ostream & os, const Value & val )
+	{
+		if ( val . isNull() )
+			os << "null";
+		else if ( val . isCons() )
+			os << "( " << val.car() << " . " << val.cdr() << " )";
+		else
+		{
+			switch ( val . memory -> type)
+			{
+				case GC::MemoryType::UNDEF:
+					os << "undef";
+					break;
+				case GC::MemoryType::NUM:
+					os << val . num();
+					break;
+				case GC::MemoryType::SYM:
+					os << "\"" << val . sym() << "\"";
+					break;
+				case GC::MemoryType::INST:
+					os << val . ins();
+					break;
+				default:
+					break;
+			}
+		}
+
+		return os;
+	}
+}
