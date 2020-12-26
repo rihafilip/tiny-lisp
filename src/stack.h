@@ -36,9 +36,6 @@ namespace lisp
 		friend std::ostream & operator<< ( std::ostream & os, const Stack & st );
 
 	private:
-		/// Helper method called by load
-		Stack loadSub ( const Stack & input ) const; 
-
 		/// Raw list data
 		Value _data;
 	};

@@ -39,22 +39,9 @@ bool Stack::empty() const
 	return _data . isNull();
 }
 
-/* loadSub loads input into new stack head first, that means previous top is at bottom
- * Thats why uppon loading stack twice, it is in correct order
- */
 Stack Stack::load ( const Stack & input ) const
 {
-	return this -> loadSub ( 
-		Stack() . loadSub ( input )
-	);
-}
-
-Stack Stack::loadSub ( const Stack & input ) const
-{
-	if ( input.empty() )
-		return *this;
-
-	return this -> push ( input.top() ) . load ( input.pop() );
+	return Stack( input . _data . append( this -> _data ) );
 }
 
 Value Stack::data () const
@@ -69,6 +56,6 @@ namespace lisp
 		if ( st.empty() )
 			return os << std::endl;
 
-		return os << st . top() << st . pop();
+		return os << st . top() << " " << st . pop();
 	}
 }
