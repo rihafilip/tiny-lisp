@@ -26,7 +26,7 @@ namespace lisp
 			NUM, /// integer
 			SYM, /// symbol
 			CONS, /// cons cell
-			INST /// SEDC instruction
+			INST /// SECD instruction
 		};
 
 		/**
@@ -58,7 +58,7 @@ namespace lisp
 				const char * name;
 				// car, cdr
 				std::pair< Memory *, Memory *> cons;
-				sedc::Instruction instruct;
+				secd::Instruction instruct;
 			};
 		};
 
@@ -80,7 +80,7 @@ namespace lisp
 		static Memory * GetMemory( int num );
 		static Memory * GetMemory( const std::string & str );
 		static Memory * GetMemory( Memory * car, Memory * cdr );
-		static Memory * GetMemory ( sedc::Instruction instruct);
+		static Memory * GetMemory ( secd::Instruction instruct);
 		static Memory * GetNull ();
 		/// @}
 

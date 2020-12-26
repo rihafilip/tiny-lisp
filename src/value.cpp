@@ -16,7 +16,7 @@ Value Value::Cons ( const Value & car, const Value & cdr )
 	return Value ( GC::GetMemory( car.memory, cdr.memory ) );
 }
 
-Value Value::Instruction ( sedc::Instruction instruct )
+Value Value::Instruction ( secd::Instruction instruct )
 {
 	return Value ( GC::GetMemory( instruct ) );
 }
@@ -108,7 +108,7 @@ std::optional<std::string> Value::sym () const
 	return memory -> name;
 }
 
-std::optional<sedc::Instruction> Value::ins () const
+std::optional<secd::Instruction> Value::ins () const
 {
 	if ( memory -> type != GC::MemoryType::INST )
 	{

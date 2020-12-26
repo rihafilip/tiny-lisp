@@ -4,7 +4,7 @@
 
 namespace lisp
 {
-	namespace sedc
+	namespace secd
 	{
 		enum Instruction
 		{

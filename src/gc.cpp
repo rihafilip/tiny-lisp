@@ -116,7 +116,7 @@ GC::Memory * GC::GetMemory( Memory * car, Memory * cdr )
 	return mem;
 }
 
-GC::Memory * GC::GetMemory ( sedc::Instruction instruct )
+GC::Memory * GC::GetMemory ( secd::Instruction instruct )
 {
 	Memory * mem = GetNextEmptyMemory();
 	mem -> type = INST;

@@ -7,7 +7,7 @@ namespace lisp
 {
 	/**
 	 * Abstraction above raw memory data
-	 * Represents integer, cons cell, null list, string or sedc Instruction
+	 * Represents integer, cons cell, null list, string or secd Instruction
 	 */
 	class Value
 	{
@@ -27,7 +27,7 @@ namespace lisp
 		static Value Integer ( int num );
 		static Value Symbol ( const std::string & in);
 		static Value Cons ( const Value & car, const Value & cdr );
-		static Value Instruction ( sedc::Instruction instruct );
+		static Value Instruction ( secd::Instruction instruct );
 		static Value Null ();
 		///@}
 		/// Removes itself from roots in GC
@@ -41,7 +41,7 @@ namespace lisp
 		std::optional<Value> 				cdr () const; 
 		std::optional<int> 					num () const; 
 		std::optional<std::string> 			sym () const; 
-		std::optional<sedc::Instruction> 	ins () const; 
+		std::optional<secd::Instruction> 	ins () const; 
 		/// @}
 		
 		/// Asks if this value is null

@@ -1,9 +1,8 @@
 #include "instruction.h"
 #include <map>
-using namespace lisp;
-using namespace sedc;
+using namespace lisp::secd;
 
-std::string lisp::sedc::toString ( Instruction ins )
+std::string lisp::secd::toString ( Instruction ins )
 {
 	std::map<Instruction, std::string> map;
 	map . insert( std::make_pair(LDC, "LDC") );
@@ -26,7 +25,7 @@ std::string lisp::sedc::toString ( Instruction ins )
 	return map[ins];
 }
 
-std::ostream & lisp::sedc::operator<< ( std::ostream & os, Instruction ins )
+std::ostream & lisp::secd::operator<< ( std::ostream & os, Instruction ins )
 {
 	return os << toString(ins);
 }
