@@ -1,13 +1,20 @@
 #pragma once
 
-#include <vector>
 #include "value.h"
+#include "instruction.h"
+
+#include <vector>
+#include <optional>
+#include <set>
+#include <map>
 
 namespace lisp
 {
     namespace tokens
     {
-        const std::vector<const char *> TOKENS_VECTOR = 
+        using namespace lisp::secd;
+        
+        const std::set<std::string> TOKENS_SET = 
         {
             // syntax
         	"(",
@@ -22,39 +29,41 @@ namespace lisp
             "quasiquote",
         	"unquote",
 
-            // artihmetics
-        	"+",
-        	"-",
-        	"*",
-        	"/",
-
-            // comparison
-        	"eq",
-        	"<",
-        	">",
-
-            // input output
-        	"print",
-        	"read",
-
         	"if",
 
             // defining
         	"defun",
-        	"let",
         	"lambda",
-
-            // list
-        	"cons",
-        	"car",
-        	"cdr",
-
-            // type identify
-        	"consp"
         };
 
-        /// Transforms vector into list
-        Value makeList();
-        Value makeList ( std::vector<const char *>::const_iterator i, std::vector<const char *>::const_iterator end, Value acc );
+        const std::map<std::string, Instruction> INSTRUCTIONS_MAP =
+        {
+            // artihmetics
+            { "+", ADD },
+            { "-", SUB },
+            { "*", MUL },
+            { "/", DIV },
+
+            // comparison
+            { "eq", EQ },
+            { "<",  LESS },
+            { ">",  MORE },
+
+            // list
+            { "cons",   CONS},
+            { "car",    CAR},
+            { "cdr",    CDR},
+            { "nil",    NIL},
+
+            // type identify
+            { "consp", CONSP },
+
+            // input output
+            { "print",    PRINT},
+            { "read",     READ}
+        };
+
+        std::optional<Instruction> translate ( const std::string & in );
+        bool isSymbol ( const std::string & in );
     }
 }

@@ -1,19 +1,19 @@
 #include "tokens.h"
 
+using namespace lisp::secd;
+
 namespace lisp::tokens
 {
-    Value makeList ( std::vector<const char *>::const_iterator i, std::vector<const char *>::const_iterator end, Value acc )
+    std::optional<Instruction> translate ( const std::string & in )
     {
-        if ( i == end )
-            return acc;
+        if ( ! INSTRUCTIONS_MAP.count( in ) )
+            return std::nullopt;
 
-        Value nextVal = Value::Symbol( *i );
-        return makeList( ++i, end, acc . append ( nextVal) );
+        return INSTRUCTIONS_MAP. at( in );
     }
 
-    /// Transforms vector into list
-    Value makeList()
+    bool isSymbol ( const std::string & in )
     {
-        return makeList ( TOKENS_VECTOR . cbegin(), TOKENS_VECTOR . cend(), Value::Null() );
+        return TOKENS_SET.count(in) || INSTRUCTIONS_MAP.count(in);
     }
 }

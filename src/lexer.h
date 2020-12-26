@@ -16,8 +16,8 @@ namespace lisp
 		static Value Scan( const std::string & str );
 
 	private:
-		/// Constructor for lexer class, constructed by Scan
-		Lexer( Value builtin );
+		/// Default contructor
+		Lexer();
 
 		Value begin ( vStack stack );
 
@@ -52,13 +52,5 @@ namespace lisp
 
 		/// Return stack without leading whitespaces
 		vStack skipSpace( vStack stack );
-
-		/// built-in tokens (brackets, quotes, 'defun' etc.)
-		Value m_Tokens;
-
-		/// Tries to find the input string in built-in tokens
-		/// @return Value if found, empty optional otherwise
-		std::optional<Value> isToken ( std::string str );
-		std::optional<Value> isToken ( std::string str, Value lst );
 	};
 }

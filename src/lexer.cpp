@@ -10,14 +10,13 @@ Value Lexer::Scan( const std::string & str )
 	// Vector is used as a stack, so string is loaded to it back to front
 	vStack stringVector ( str.rbegin(), str.rend() );
 
-	Lexer lexer ( tokens::makeList() );
-	return lexer . begin ( stringVector );
+	Lexer l;
+	return l . begin ( stringVector );
 }
 
 /*******************************************************/
 
-Lexer::Lexer( Value builtin )
-: m_Tokens ( builtin )
+Lexer::Lexer()
 {}
 
 /*******************************************************/
@@ -88,17 +87,14 @@ std::pair<std::optional<Value>, vStack> Lexer::nextToken( vStack stack )
 		return nextToken( skipSpace(stack) );
 	}
 	
-	// otherwise built in symbol
-	std::optional<Value> ret = isToken( str );
-
 	// if not built-in symbol, it fails
-	if ( ! ret )
+	if ( ! tokens::isSymbol( str ) )
 	{
 		std::cerr << "\"" << str << "\" is not a token." << std::endl;
 		return std::make_pair( std::nullopt, vStack {'f'} ); // dummy stack, is not empty
 	}
 
-	return std::make_pair( ret, stack );
+	return std::make_pair( Value::Symbol(str), stack );
 }
 
 std::pair<std::string, vStack> Lexer::restOfToken( vStack stack, std::function<int(int)> comp, std::string acc )
@@ -133,22 +129,4 @@ std::pair<std::optional<Value>, vStack> Lexer::makeSymbol ( std::pair<std::strin
 vStack Lexer::skipSpace( vStack stack )
 {
 	return restOfToken( stack, isspace, std::string() ) . second;
-}
-
-/*******************************************************/
-
-std::optional<Value> Lexer::isToken ( std::string str )
-{
-	return isToken( str, m_Tokens );
-}
-
-std::optional<Value> Lexer::isToken ( std::string str, Value lst )
-{
-	if ( lst . isNull() )
-		return std::nullopt;
-
-	if ( lst . car() -> sym() . value() == str )
-		return lst . car() . value();
-
-	return isToken ( str, lst . cdr() . value() );
 }
