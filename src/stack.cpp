@@ -57,4 +57,18 @@ Stack Stack::loadSub ( const Stack & input ) const
 	return this -> push ( input.top() ) . load ( input.pop() );
 }
 
+Value Stack::data () const
+{
+	return _data;
+}
+
+namespace lisp
+{
+	std::ostream & operator<< ( std::ostream & os, const Stack & st )
+	{
+		if ( st.empty() )
+			return os << std::endl;
+
+		return os << st . top() << st . pop();
+	}
 }

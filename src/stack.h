@@ -30,6 +30,10 @@ namespace lisp
 		/// Returns stack with input on top of *this
 		Stack load ( const Stack & input ) const;
 
+		/// Returns underlying cons cells
+		Value data () const;
+
+		friend std::ostream & operator<< ( std::ostream & os, const Stack & st );
 
 	private:
 		/// Helper method called by load
