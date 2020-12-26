@@ -11,7 +11,7 @@ Value Value::Symbol ( const std::string & in )
 	return Value ( GC::GetMemory( in ) );
 }
 
-Value Value::Cons ( Value & car, Value & cdr )
+Value Value::Cons ( Value car, Value cdr )
 {
 	return Value ( GC::GetMemory( car.memory, cdr.memory ) );
 }
