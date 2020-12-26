@@ -9,34 +9,48 @@ namespace lisp
     {
         const std::vector<const char *> TOKENS_VECTOR = 
         {
+            // syntax
         	"(",
         	")",
-        	";",
+        	".",
+
+            // quoting
         	"`",
         	",",
-        	".",
+        	"'",
+            "quote",
+            "quasiquote",
+        	"unquote",
+
+            // artihmetics
         	"+",
         	"-",
         	"*",
         	"/",
+
+            // comparison
         	"eq",
         	"<",
         	">",
+
+            // input output
         	"print",
         	"read",
+
         	"if",
+
+            // defining
+        	"defun",
+        	"let",
         	"lambda",
-        	"quote",
-        	"apply",
+
+            // list
         	"cons",
         	"car",
         	"cdr",
-        	"consp",
-        	"defun",
-        	"let",
-        	"t",
-        	"'",
-        	""
+
+            // type identify
+        	"consp"
         };
 
         /// Transforms vector into list
