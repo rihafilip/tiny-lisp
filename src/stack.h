@@ -28,9 +28,13 @@ namespace lisp
 		bool empty () const;
 
 		/// Returns stack with input on top of *this
-		Stack load ( const Stack & top ) const;
+		Stack load ( const Stack & input ) const;
+
 
 	private:
+		/// Helper method called by load
+		Stack loadSub ( const Stack & input ) const; 
+
 		/// Raw list data
 		Value _data;
 	};

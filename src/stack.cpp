@@ -39,7 +39,22 @@ bool Stack::empty() const
 	return _data . isNull();
 }
 
-Stack Stack::load ( const Stack & top ) const
+/* loadSub loads input into new stack head first, that means previous top is at bottom
+ * Thats why uppon loading stack twice, it is in correct order
+ */
+Stack Stack::load ( const Stack & input ) const
 {
-	return Stack ( top . _data . append ( this -> _data ) );
+	return this -> loadSub ( 
+		Stack() . loadSub ( input )
+	);
+}
+
+Stack Stack::loadSub ( const Stack & input ) const
+{
+	if ( input.empty() )
+		return *this;
+
+	return this -> push ( input.top() ) . load ( input.pop() );
+}
+
 }
