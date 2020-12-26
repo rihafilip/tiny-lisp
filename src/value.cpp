@@ -150,16 +150,15 @@ bool Value::isIns () const
 
 Value Value::append ( const Value & val ) const
 {
-	if ( isNull() )
-		return val;
+	return append( *this, val );
+}
 
-	if ( ! isCons() )
-		return Value::Cons( *this, Value::Cons( val, Value::Null() ) );
+Value Value::append ( const Value & first, const Value & last )
+{
+	if ( first . isNull() )
+		return last;
 
-	if ( cdr() . value() . isNull() )
-		return Value::Cons( car().value(), Value::Cons( val, Value::Null() ) );
-
-	return Value::Cons( car().value(), cdr() -> append( val ) );
+	return Cons( first.car().value(), append( first.cdr().value(), last ) );
 }
 
 /*********************************************************/

@@ -55,12 +55,15 @@ namespace lisp
 		bool isIns () const;
 		/// @}
 
-		/// If this is cons, it returns this with appended val
+		/// Append val to this
 		Value append ( const Value & val ) const;
 
 		friend std::ostream & operator<< (std::ostream & os, const Value & val );
 
 	private:
+		/// Helper function called by append
+		static Value append ( const Value & first, const Value & last );
+
 		/// Asigns itself as root in GC
 		Value( GC::Memory * in );
 

@@ -35,10 +35,9 @@ Value Lexer::evaluate ( std::pair<std::optional<Value>, vStack> pair , Value acc
 		return stack . empty() ? acc : Value::Null();
 
 	Value val = optional . value();
+	Value ret = acc . append( Value::Cons( val, Value::Null() ) );
 
-	return evaluate (
-		nextToken( skipSpace(stack) ),
-		acc . append( val ) );
+	return evaluate ( nextToken( skipSpace(stack) ), ret);
 }
 
 /*******************************************************/
