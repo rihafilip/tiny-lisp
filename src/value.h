@@ -28,17 +28,17 @@ namespace lisp
 		 * \defgroup Val_get Value getters
 		 * @{
 		 */
-		Value car ();
-		Value cdr ();
-		int num ();
-		std::string sym ();
-		sedc::Instruction ins ();
+		Value car () const; 
+		Value cdr () const; 
+		int num () const; 
+		std::string sym () const; 
+		sedc::Instruction ins () const; 
 		/// @}
 		
 		/// Asks if this value is null
-		bool isNull ();
+		bool isNull () const; 
 		/// Asks if this value is cons
-		bool isCons ();
+		bool isCons () const; 
 
 		/// If this is cons, it returns this with appended val
 		Value append (Value & val);
@@ -50,7 +50,7 @@ namespace lisp
 		Value( GC::Memory * in );
 
 		/// helper error function
-		void error ( GC::MemoryType expected );
+		void error ( GC::MemoryType expected ) const;
 		GC::Memory * memory;
 	};
 }

@@ -41,7 +41,7 @@ Value::~Value()
 
 /*********************************************************/
 
-void Value::error ( GC::MemoryType expected )
+void Value::error ( GC::MemoryType expected ) const
 {
 	std::string mess = "Expected ";
 	mess += toString(expected) ;
@@ -53,7 +53,7 @@ void Value::error ( GC::MemoryType expected )
 
 /*********************************************************/
 
-Value Value::car ()
+Value Value::car () const
 {
 	if ( memory -> type != GC::MemoryType::CONS )
 		error (GC::MemoryType::CONS);
@@ -61,7 +61,7 @@ Value Value::car ()
 	return Value ( memory -> cons . first );
 }
 
-Value Value::cdr ()
+Value Value::cdr () const
 {
 	if ( memory -> type != GC::MemoryType::CONS )
 		error (GC::MemoryType::CONS);
@@ -69,7 +69,7 @@ Value Value::cdr ()
 	return Value ( memory -> cons . second );
 }
 
-int Value::num ()
+int Value::num () const
 {
 	if ( memory -> type != GC::MemoryType::NUM )
 		error (GC::MemoryType::NUM);
@@ -77,7 +77,7 @@ int Value::num ()
 	return memory -> number;
 }
 
-std::string Value::sym ()
+std::string Value::sym () const
 {
 	if ( memory -> type != GC::MemoryType::SYM )
 		error (GC::MemoryType::SYM);
@@ -85,7 +85,7 @@ std::string Value::sym ()
 	return memory -> name;
 }
 
-sedc::Instruction Value::ins ()
+sedc::Instruction Value::ins () const
 {
 	if ( memory -> type != GC::MemoryType::INST )
 		error (GC::MemoryType::INST);
@@ -95,12 +95,12 @@ sedc::Instruction Value::ins ()
 
 /*********************************************************/
 
-bool Value::isNull ()
+bool Value::isNull () const
 {
 	return memory -> type == GC::MemoryType::EMPTY;
 }
 
-bool Value::isCons ()
+bool Value::isCons () const
 {
 	return memory -> type == GC::MemoryType::CONS;
 }
