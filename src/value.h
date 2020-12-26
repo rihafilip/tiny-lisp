@@ -44,10 +44,16 @@ namespace lisp
 		std::optional<secd::Instruction> 	ins () const; 
 		/// @}
 		
-		/// Asks if this value is null
-		bool isNull () const; 
-		/// Asks if this value is cons
-		bool isCons () const; 
+		/**
+		 * \defgroup Val_bool Value to boolean converters
+		 * @{
+		 */
+		bool isNull () const;
+		bool isCons () const;
+		bool isNum () const;
+		bool isSym () const;
+		bool isIns () const;
+		/// @}
 
 		/// If this is cons, it returns this with appended val
 		Value append ( const Value & val );

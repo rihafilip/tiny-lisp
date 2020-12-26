@@ -131,6 +131,21 @@ bool Value::isCons () const
 	return memory -> type == GC::MemoryType::CONS;
 }
 
+bool Value::isNum () const
+{
+	return memory -> type == GC::MemoryType::NUM;
+}
+
+bool Value::isSym () const
+{
+	return memory -> type == GC::MemoryType::SYM;
+}
+
+bool Value::isIns () const
+{
+	return memory -> type == GC::MemoryType::INST;
+}
+
 /*********************************************************/
 
 Value Value::append ( const Value & val )
