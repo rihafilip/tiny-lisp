@@ -109,11 +109,12 @@ bool Value::isCons ()
 
 Value Value::append ( Value & val )
 {
-	if ( memory -> type != GC::MemoryType::CONS )
-		error( GC::MemoryType::CONS );
-
 	if ( isNull() )
 		return val;
+
+	if ( ! isCons() )
+		return Value::Cons( *this, val );
+
 
 	return Value::Cons( car(), cdr() . append( val ) );
 }
