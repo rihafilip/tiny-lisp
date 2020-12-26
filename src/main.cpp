@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "compiler.h"
 #include <cassert>
 #include <stdexcept>
 using namespace lisp;
@@ -74,11 +75,26 @@ void testParser()
 	GC::Stop();
 }
 
+void testCompiler()
+{
+	GC::Start();
+
+	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan( "( + 1 2 )" ) ) ) << std::endl << std::endl;
+	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan( "( if 0 ( + 1 2 ) ( - 2 3) )" ) ) ) << std::endl << std::endl;
+	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan(
+		"( if ( if ( + 2 3 ) 1 0 ) ( consp 1 ) ( consp 0 ) )"
+	) ) ) << std::endl;
+
+
+	GC::Stop();
+}
+
 int main(int argc, char const *argv[])
 {
 	testGC();
 	testValue();
 	testLexer();
 	testParser();
+	testCompiler();
 	return 0;
 }
