@@ -23,12 +23,15 @@ Stack Stack::push ( Value in ) const
 
 Value Stack::top () const
 {
+	if ( empty() )
+		return Value::Null();
+
 	return _data.car().value();
 }
 
 Stack Stack::pop () const
 {
-	if ( _data . isNull() )
+	if ( empty() )
 		return *this;
 
 	return Stack ( _data . cdr() . value() );
