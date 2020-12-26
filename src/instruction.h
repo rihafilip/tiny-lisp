@@ -8,22 +8,44 @@ namespace lisp
 	{
 		enum Instruction
 		{
+			// load constants
 			LDC,
 			NIL,
+
+			// arithmetic
 			ADD,
 			SUB,
 			MUL,
 			DIV,
+
+			// comparison
+			LESS,
+			MORE,
+			EQ,
+
+			// list
 			CONS,
 			CAR,
 			CDR,
+
+			// type identify
 			CONSP,
+
+			// if
 			SEL,
 			JOIN,
+
+			// aditional loading
 			LD,
 			LDF,
+
+			// function
 			AP,
-			RTN
+			RTN,
+
+			//IO
+			PRINT,
+			READ
 		};
 
 		std::string toString ( Instruction ins );
