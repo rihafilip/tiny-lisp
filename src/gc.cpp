@@ -107,10 +107,14 @@ GC::Memory * GC::GetMemory( const std::string & str )
 	return mem;
 }
 
-GC::Memory * GC::GetMemory( Memory * car, Memory * cdr )
+GC::Memory * GC::GetMemory( Memory * car, Memory * cdr, bool isClos )
 {
 	Memory * mem = GetNextEmptyMemory();
-	mem -> type = CONS;
+	if ( isClos )
+		mem -> type = CLOS;
+	else
+		mem -> type = CONS;
+	
 	mem -> cons . first = car;
 	mem -> cons . second = cdr;
 	return mem;
@@ -247,6 +251,8 @@ std::string lisp::toString ( GC::MemoryType type )
 			return "symbol";
 		case GC::MemoryType::CONS:
 			return "cons";
+		case GC::MemoryType::CLOS:
+			return "closure";
 		case GC::MemoryType::INST:
 			return "instruction";
 	}

@@ -26,6 +26,7 @@ namespace lisp
 			NUM, /// integer
 			SYM, /// symbol
 			CONS, /// cons cell
+			CLOS, /// closure cons cell
 			INST /// SECD instruction
 		};
 
@@ -79,7 +80,7 @@ namespace lisp
 		 */
 		static Memory * GetMemory( int num );
 		static Memory * GetMemory( const std::string & str );
-		static Memory * GetMemory( Memory * car, Memory * cdr );
+		static Memory * GetMemory( Memory * car, Memory * cdr, bool isClos );
 		static Memory * GetMemory ( secd::Instruction instruct);
 		static Memory * GetNull ();
 		/// @}

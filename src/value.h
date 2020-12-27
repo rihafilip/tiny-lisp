@@ -27,6 +27,7 @@ namespace lisp
 		static Value Integer ( int num );
 		static Value Symbol ( const std::string & in);
 		static Value Cons ( const Value & car, const Value & cdr );
+		static Value Closure( const Value & function, const Value & enviroment );
 		static Value Instruction ( secd::Instruction instruct );
 		static Value Null ();
 		///@}
@@ -50,6 +51,7 @@ namespace lisp
 		 */
 		bool isNull () const;
 		bool isCons () const;
+		bool isClos () const;
 		bool isNum () const;
 		bool isSym () const;
 		bool isIns () const;

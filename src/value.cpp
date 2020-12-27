@@ -13,7 +13,12 @@ Value Value::Symbol ( const std::string & in )
 
 Value Value::Cons ( const Value & car, const Value & cdr )
 {
-	return Value ( GC::GetMemory( car.memory, cdr.memory ) );
+	return Value ( GC::GetMemory( car.memory, cdr.memory, false ) );
+}
+
+Value Value::Closure ( const Value & function, const Value & enviroment )
+{
+	return Value ( GC::GetMemory( function.memory, enviroment.memory, true ) );
 }
 
 Value Value::Instruction ( secd::Instruction instruct )
@@ -68,7 +73,9 @@ void Value::error ( GC::MemoryType expected ) const
 
 Value Value::car () const
 {
-	if ( memory -> type != GC::MemoryType::CONS )
+	if ( memory -> type != GC::MemoryType::CONS
+		&& memory -> type != GC::MemoryType::CLOS
+	)
 		error (GC::MemoryType::CONS);
 
 	return Value ( memory -> cons . first );
@@ -76,7 +83,9 @@ Value Value::car () const
 
 Value Value::cdr () const
 {
-	if ( memory -> type != GC::MemoryType::CONS )
+	if ( memory -> type != GC::MemoryType::CONS
+		&& memory -> type != GC::MemoryType::CLOS
+	)
 		error (GC::MemoryType::CONS);
 
 	return Value ( memory -> cons . second );
@@ -116,6 +125,11 @@ bool Value::isNull () const
 bool Value::isCons () const
 {
 	return memory -> type == GC::MemoryType::CONS;
+}
+
+bool Value::isClos () const
+{
+	return memory -> type == GC::MemoryType::CLOS;
 }
 
 bool Value::isNum () const
@@ -184,6 +198,7 @@ void Value::print ( std::ostream & os ) const
 			break;
 
 		case GC::MemoryType::CONS:
+		case GC::MemoryType::CLOS:
 			os << "( ";
 			
 			car() . print (os);
