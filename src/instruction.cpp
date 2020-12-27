@@ -32,6 +32,7 @@ std::string lisp::secd::toString ( Instruction ins )
 
 		{ AP, "AP" },
 		{ RTN, "RTN" },
+		{ DEFUN, "DEFUN" },
 
 		{ PRINT, "PRINT" },
 		{ READ, "READ" }

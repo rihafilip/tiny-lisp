@@ -42,6 +42,7 @@ namespace lisp
 			// function
 			AP,
 			RTN,
+			DEFUN,
 
 			//IO
 			PRINT,
