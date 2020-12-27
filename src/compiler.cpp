@@ -41,7 +41,7 @@ std::optional<Stack> Compiler::Single()
 
 	// Instruction is just pushed
 	if ( val.isIns() )
-		Stack() . push( Value::Instruction( val.ins().value() ) );
+		Stack() . push( Value::Instruction( val.ins() ) );
 
 	// Number is loaded via LDC
 	if ( val.isNum() )
@@ -52,7 +52,7 @@ std::optional<Stack> Compiler::Single()
 		return Compiler( val ) . Compile(); // TODO processes wrong
 
 	// is Symbol
-	std::string str = val.sym().value();
+	std::string str = val.sym();
 	if ( tokens::isSymbol( str ) )
 		return CompileBuiltIn( str );
 

@@ -33,20 +33,29 @@ void testValue ()
 	for ( int i = 0; i < 10; ++i )
 	{
 		Value a = Value::Integer( i );
-		assert( *(a.num()) == i );
+		assert( a.num() == i );
 	}
 
 	Value b = Value::Integer( 5 );
-	std::cerr << "Expected error: ";
-	assert( ! b.sym() );
+	bool catching = false;
+	try
+	{
+		std::cerr << "Expected error: ";
+		b.sym();	
+	}
+	catch ( std::runtime_error & e )
+	{
+		catching = true;
+	}
+	assert( catching );
 
 	for ( int i = 0; i < 3; ++i )
 	{
 		Value a = Value::Symbol( std::string("a") );
-		assert( *(a.sym()) == "a");		
+		assert( a.sym() == "a");		
 	}
 
-	assert ( *(b.num()) == 5 );
+	assert ( b.num() == 5 );
 	GC::Stop();
 }
 

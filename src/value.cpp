@@ -60,61 +60,48 @@ void Value::error ( GC::MemoryType expected ) const
 	<< toString(expected)
 	<< ", got "
 	<< toString(memory -> type) << std::endl;
+
+	throw std::runtime_error("Bad Value access");
 }
 
 /*********************************************************/
 
-std::optional<Value> Value::car () const
+Value Value::car () const
 {
 	if ( memory -> type != GC::MemoryType::CONS )
-	{
 		error (GC::MemoryType::CONS);
-		return std::nullopt;
-	}
 
 	return Value ( memory -> cons . first );
 }
 
-std::optional<Value> Value::cdr () const
+Value Value::cdr () const
 {
 	if ( memory -> type != GC::MemoryType::CONS )
-	{
 		error (GC::MemoryType::CONS);
-		return std::nullopt;
-	}
 
 	return Value ( memory -> cons . second );
 }
 
-std::optional<int> Value::num () const
+int Value::num () const
 {
 	if ( memory -> type != GC::MemoryType::NUM )
-	{
 		error (GC::MemoryType::NUM);
-		return std::nullopt;
-	}
 
 	return memory -> number;
 }
 
-std::optional<std::string> Value::sym () const
+std::string Value::sym () const
 {
 	if ( memory -> type != GC::MemoryType::SYM )
-	{
 		error (GC::MemoryType::SYM);
-		return std::nullopt;
-	}
 
 	return memory -> name;
 }
 
-std::optional<secd::Instruction> Value::ins () const
+secd::Instruction Value::ins () const
 {
 	if ( memory -> type != GC::MemoryType::INST )
-	{
 		error (GC::MemoryType::INST);
-		return std::nullopt;
-	}
 
 	return memory -> instruct;
 }
@@ -158,7 +145,7 @@ Value Value::append ( const Value & first, const Value & last )
 	if ( first . isNull() )
 		return last;
 
-	return Cons( first.car().value(), append( first.cdr().value(), last ) );
+	return Cons( first.car(), append( first.cdr(), last ) );
 }
 
 /*********************************************************/
@@ -185,23 +172,23 @@ void Value::print ( std::ostream & os ) const
 			break;
 
 		case GC::MemoryType::NUM:
-			os << num() . value();
+			os << num();
 			break;
 
 		case GC::MemoryType::SYM:
-			os << '\'' << sym() . value() << '\'';
+			os << '\'' << sym() << '\'';
 			break;
 
 		case GC::MemoryType::INST:
-			os << ins() . value();
+			os << ins();
 			break;
 
 		case GC::MemoryType::CONS:
 			os << "( ";
 			
-			car() -> print (os);
+			car() . print (os);
 		 	os << " ";
-		 	cdr() -> print (os);
+		 	cdr() . print (os);
 
 			os << " )";
 			break;

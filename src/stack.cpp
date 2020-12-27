@@ -26,7 +26,7 @@ Value Stack::top () const
 	if ( empty() )
 		return Value::Null();
 
-	return _data.car().value();
+	return _data.car();
 }
 
 Stack Stack::pop () const
@@ -34,7 +34,11 @@ Stack Stack::pop () const
 	if ( empty() )
 		return *this;
 
-	return Stack ( _data . cdr() . value() );
+	// corrupoted stack
+	if ( ! _data.isCons() )
+		return Stack();
+
+	return Stack ( _data . cdr() );
 }
 
 bool Stack::empty() const

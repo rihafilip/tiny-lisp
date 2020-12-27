@@ -37,11 +37,11 @@ namespace lisp
 		 * \defgroup Val_get Value getters
 		 * @{
 		 */
-		std::optional<Value> 				car () const; 
-		std::optional<Value> 				cdr () const; 
-		std::optional<int> 					num () const; 
-		std::optional<std::string> 			sym () const; 
-		std::optional<secd::Instruction> 	ins () const; 
+		Value				car () const; 
+		Value				cdr () const; 
+		int					num () const; 
+		std::string			sym () const; 
+		secd::Instruction	ins () const; 
 		/// @}
 		
 		/**
@@ -67,7 +67,7 @@ namespace lisp
 		/// Asigns itself as root in GC
 		Value( GC::Memory * in );
 
-		/// Helper error function, prints to stderr
+		/// Helper error function, prints to stderr and throws
 		void error ( GC::MemoryType expected ) const;
 
 		void print ( std::ostream & os ) const;

@@ -55,7 +55,7 @@ std::optional<Value> Parser::Item ()
 
 	if ( next.isSym() )
 	{
-		std::string str = next.sym().value();
+		std::string str = next.sym();
 		input = input.pop();
 
 		if ( str == "(" )
@@ -97,14 +97,14 @@ std::optional<Value> Parser::List ()
 	if ( top.isSym() )
 	{
 		// closing bracket
-		if ( top.sym().value() == ")" )
+		if ( top.sym() == ")" )
 		{
 			input = input.pop();
 			return Value::Null();
 		}
 
 		// ... ". ITEM )"
-		else if ( top.sym().value() == "." )
+		else if ( top.sym() == "." )
 		{
 			input = input.pop();
 			std::optional<Value> next = Item();
@@ -112,7 +112,7 @@ std::optional<Value> Parser::List ()
 				return std::nullopt;
 
 			top = input.top();
-			if ( ! top.isSym() || top.sym().value() != ")" )
+			if ( ! top.isSym() || top.sym() != ")" )
 				return error( "Expected ')' after cons." );
 		}
 	}
