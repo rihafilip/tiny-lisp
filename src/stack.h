@@ -14,7 +14,7 @@ namespace lisp
 		/// Empty stack constructor
 		Stack ();
 		/// Creates non-empty stack
-		Stack ( const Value & val );
+		explicit Stack ( const Value & val );
 		Stack & operator= ( const Stack & other );
 
 		/// Returns stack with added value

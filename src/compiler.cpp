@@ -224,7 +224,7 @@ std::optional<Stack> Compiler::CompileIf ()
 		. push ( arg3.data() )
 		. push ( arg2.data() )
 		. push( Value::Instruction( SEL ) )
-		. load ( arg1.data() );
+		. push ( arg1.data() );
 }
 
 std::optional<Stack> Compiler::CompileQuasiquote ()
