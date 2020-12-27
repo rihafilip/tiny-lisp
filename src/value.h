@@ -72,7 +72,7 @@ namespace lisp
 		/// Helper error function, prints to stderr and throws
 		void error ( GC::MemoryType expected ) const;
 
-		void print ( std::ostream & os ) const;
+		void print ( std::ostream & os, bool list = false ) const;
 
 		/// Raw memory block
 		GC::Memory * memory;

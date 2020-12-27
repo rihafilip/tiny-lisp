@@ -173,7 +173,7 @@ namespace lisp
 	}
 }
 
-void Value::print ( std::ostream & os ) const
+void Value::print ( std::ostream & os, bool list ) const
 {
 	switch ( memory -> type )
 	{
@@ -199,13 +199,18 @@ void Value::print ( std::ostream & os ) const
 
 		case GC::MemoryType::CONS:
 		case GC::MemoryType::CLOS:
-			os << "( ";
+			if ( ! list )
+				os << "( ";
 			
 			car() . print (os);
-		 	os << " ";
-		 	cdr() . print (os);
+			if ( ! cdr() .isNull()  )
+			{
+			 	os << " ";
+			 	cdr() . print (os, true);
+		 	}
 
-			os << " )";
+			if ( ! list )
+				os << " )";
 			break;
 	}
 }
