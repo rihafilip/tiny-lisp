@@ -7,8 +7,15 @@ using namespace lisp::secd;
 
 Value Compiler::Begin ( const Value & in )
 {
-	Compiler c = Compiler (in);
-	return c . Compile() . value_or( Stack() ) . data();//TODO
+	if ( in.isNull() )
+		return Value::Null();
+
+	Compiler c = Compiler (in.car());
+	Value next = Begin( in.cdr() );
+	return Value::Cons(
+		c . Compile() . value_or( Stack() ) . data(),
+		next
+	);
 }
 
 Compiler::Compiler ( const Value & in )
@@ -180,7 +187,7 @@ std::optional<Stack> Compiler::CompileBuiltIn ( const std::string & val )
 	}
 
 	// shouldn't occur
-	std::cerr << "Incorrect usage of symbol." << std::endl;
+	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
 	return std::nullopt;
 }
 
