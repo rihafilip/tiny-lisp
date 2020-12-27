@@ -84,15 +84,21 @@ void testParser()
 	GC::Stop();
 }
 
+void compile ( std::string str )
+{
+	std::cout << "input " << str << std::endl;
+	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl << std::endl;	
+}
+
 void testCompiler()
 {
 	GC::Start();
 
-	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan( "( + 1 2 )" ) ) ) << std::endl << std::endl;
-	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan( "( if 0 ( + 1 2 ) ( - 2 3) )" ) ) ) << std::endl << std::endl;
-	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan(
-		"( if ( if ( + 2 3 ) 1 0 ) ( consp 1 ) ( consp 0 ) )"
-	) ) ) << std::endl;
+	compile( "( + 1 2 )" );
+	compile( "( if 0 ( + 1 2 ) ( - 2 3) )" );
+	compile( "( if ( if ( + 2 3 ) 1 0 ) ( consp 1 ) ( consp 0 ) )" );
+	compile( "( + 1 ((lambda (x y) (+ x y)) 10 20 ) )" );
+	compile( "( (lambda (z) ((lambda (x y) (+ y z) ) 10 20 ) ) 5 )" );
 
 
 	GC::Stop();

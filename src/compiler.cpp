@@ -12,12 +12,50 @@ Value Compiler::Begin ( const Value & in )
 }
 
 Compiler::Compiler ( const Value & in )
-: input ( in )
+: _input ( in )
+, _envMap()
 {}
+
+Compiler::Compiler ( const Value & input, const std::map<std::string, Value> & env )
+: _input ( input )
+, _envMap ( env )
+{}
+
+// shifts layer of enviroment by one
+std::map<std::string, Value> Compiler::Shift( const std::map<std::string, Value> & env )
+{
+	std::map<std::string, Value> out;
+
+	std::transform( env.cbegin(), env.cend(), std::inserter( out, out.end() ),
+		[]( auto i )
+		{
+			return std::make_pair(
+				i.first,
+				Value::Cons(
+					Value::Integer( i.second.car().num() + 1), // shift level by one
+					i.second.cdr()
+				)
+			);
+		}
+	);
+
+	return out;
+}
+
+std::map<std::string, Value> Compiler::MakeEnviroment( std::map<std::string, Value> enviroment, const Value & val, int counter )
+{
+	if ( val .isNull() )
+		return enviroment;
+
+	enviroment.insert( std::make_pair ( val.car().sym(), Value::Cons( Value::Integer(0), Value::Integer(counter) ) ) );
+	return MakeEnviroment( enviroment, val.cdr(), ++counter );
+}
+
+/****************************************************************************/
 
 std::optional<Stack> Compiler::Compile()
 {
-	if ( input . empty() )
+	if ( _input . empty() )
 		return std::nullopt;
 
 	std::optional<Stack> car = Single();
@@ -31,13 +69,46 @@ std::optional<Stack> Compiler::Compile()
 	return Stack() . load( *car ) . load ( *cdr );
 }
 
-std::optional<Stack> Compiler::Single()
+std::optional<Stack> Compiler::CompileArgs( const Stack & st )
 {
-	if ( input . empty() )
+	std::optional<Stack> cdr = CompileArgs();
+	if ( ! cdr )
 		return std::nullopt;
 
-	Value val = input.top();
-	input = input.pop();
+	return st . load ( *cdr );
+}
+
+// TODO merge with Compile
+std::optional<Stack> Compiler::CompileArgs()
+{
+	if ( _input . empty() )
+		return std::nullopt;
+
+	std::optional<Stack> carOpt = Single();
+	if ( ! carOpt )
+		return std::nullopt;
+
+	Stack car = Stack() . push ( Value::Instruction( CONS ) ) . load ( *carOpt );
+
+	std::optional<Stack> cdr = CompileArgs();
+	if ( ! cdr )
+		return car . push( Value::Instruction( NIL ) );
+
+	return Stack() . load( car ) . load ( *cdr );	
+}
+
+/****************************************************************************/
+
+std::optional<Stack> Compiler::Single()
+{
+	if ( _input . empty() )
+	{
+		std::cerr << "Unexpected EOF." << std::endl;
+		return std::nullopt;
+	}
+
+	Value val = _input.top();
+	_input = _input.pop();
 
 	// Instruction is just pushed
 	if ( val.isIns() )
@@ -47,16 +118,40 @@ std::optional<Stack> Compiler::Single()
 	if ( val.isNum() )
 		return Stack() . push ( val ) . push( Value::Instruction( LDC ) ) ;
 
-	// Cons cell which means sub-list, is processed individualy
+	// Cons cell which means sub-list, lambda or defun
 	if ( val.isCons() )
-		return Compiler( val ) . Compile(); // TODO processes wrong
+		return CompileCons( val );
 
 	// is Symbol
 	std::string str = val.sym();
+
+	// is built-in symbol
 	if ( tokens::isSymbol( str ) )
 		return CompileBuiltIn( str );
 
 	return CompileSymbol( str );
+}
+
+/****************************************************************************/
+
+std::optional<Stack> Compiler::CompileCons ( const Value & val )
+{
+	// lambda or defun
+	// (lambda (params) (body)
+	// car -> 'lambda' | 'defun'
+	if ( val.car().isSym() )
+	{
+		std::string str = val.car().sym();
+
+		if ( str == "lambda" )
+			return CompileArgs( CompileLambda( val ) );
+
+		else if ( str == "defun" )
+			return CompileDefun( val );
+	}
+
+	// sub-list is processed individualy
+	return Compiler( val, _envMap ) . Compile();
 }
 
 std::optional<Stack> Compiler::CompileBuiltIn ( const std::string & val )
@@ -66,21 +161,41 @@ std::optional<Stack> Compiler::CompileBuiltIn ( const std::string & val )
 	if ( opt )
 		return Stack() . push ( Value::Instruction( *opt ) );
 
-	// quote, unquote, quasiquote, if, defun, lambda
-	
 	if ( val == "if" )
 		return CompileIf();
 
-	//TODO
-	return Stack();
+	if ( val == "quote" )
+	{
+		//TODO
+		return Stack();
+	}
+
+	if ( val == "quasiquote" )
+		return CompileQuasiquote();
+
+	if ( val == "unquote" )
+	{
+		std::cerr << "Unquote not in quasiquote." << std::endl;
+		return std::nullopt;
+	}
+
+	// shouldn't occur
+	std::cerr << "Incorrect usage of symbol." << std::endl;
+	return std::nullopt;
 }
 
 
 std::optional<Stack> Compiler::CompileSymbol ( const std::string & val )
 {
 	//TODO
-	return Stack();
+	if ( _envMap.count( val ) )
+		return Stack() . push ( _envMap.at(val) ) . push( Value::Instruction(LD) );
+ 
+	std::cerr << "Token '" << val << "' is not defined." << std::endl;
+	return std::nullopt;
 }
+
+/****************************************************************************/
 
 std::optional<Stack> Compiler::CompileIf ()
 {
@@ -112,16 +227,54 @@ std::optional<Stack> Compiler::CompileIf ()
 		. load ( arg1.data() );
 }
 
-std::optional<Stack> Compiler::CompileDefun ()
+std::optional<Stack> Compiler::CompileQuasiquote ()
 {
 	//TODO
 	return Stack();
 }
 
-std::optional<Stack> Compiler::CompileLambda ()
+/****************************************************************************/
+// input (defun name (params) (body))
+std::optional<Stack> Compiler::CompileDefun ( const Value & val )
 {
-	//TODO
+	if ( !( val.cdr().isCons()
+		&& val.cdr().car().isSym()
+	))
+	{
+		std::cerr << "Wrong structure of defun." << std::endl;
+		return std::nullopt;
+	}
+
+
 	return Stack();
 }
 
+// input (symbol (params) (body))
+std::optional<Stack> Compiler::CompileLambda ( const Value & val )
+{
+	// correct structure
+	if ( !(	val.cdr().isCons() // ( (params) . ( (body) . nil ) )
+		&& 	val.cdr().cdr().isCons() // (body . nil)
+		&& 	val.cdr().cdr().cdr().isNull() // nil
+	))
+	{
+		std::cerr << "Wrong structure of lambda." << std::endl;
+		return std::nullopt;
+	}
 
+	Value params = val.cdr().car();
+	Value body = val.cdr().cdr().car();
+
+	std::map<std::string, Value> enviroment = MakeEnviroment( Shift(_envMap), params );
+
+	std::optional<Stack> compiledBodyOpt = Compiler( body, enviroment ) . Compile();
+
+	if ( ! compiledBodyOpt )
+		return std::nullopt;
+
+	Stack compiledBody = Stack() . push ( Value::Instruction( RTN ) ) . load( *compiledBodyOpt );
+	return Stack()
+	 	. push( Value::Instruction( AP ) )
+		. push( compiledBody . data() )
+		. push( Value::Instruction( LDF ) );
+}
