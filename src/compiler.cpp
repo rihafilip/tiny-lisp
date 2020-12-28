@@ -201,12 +201,11 @@ Compiler::CompilePair Compiler::CompileBuiltIn ( const std::string & val, const 
 	if ( val == "if" )
 		return CompileIf( st, env, funcs );
 
-	//TODO
-	// if ( val == "quote" )
-	// 	return {std::nullopt, st};
+	if ( val == "quote" )
+		return CompileQuote( st, env, funcs );
 
-	// if ( val == "quasiquote" )
-	// 	return {std::nullopt, st};
+	if ( val == "quasiquote" )
+		return CompileQuasiquote( st, env, funcs );
 
 	if ( val == "unquote" )
 	{
@@ -274,6 +273,48 @@ Compiler::CompilePair Compiler::CompileIf ( const Stack & st, const EnvMap & env
 		. load ( arg1 );
 
 	return { output, st3 };
+}
+
+Compiler::CompilePair Compiler::CompileQuote ( const Stack & st, const EnvMap & env, const FunSet & funcs )
+{
+	if ( st.empty() )
+	{
+		std::cerr << "Quote used without arguments." << std::endl;
+		return { std::nullopt, st };
+	}
+
+	return { Stack() . push( st.top() ) . push( Value::Instruction( LDC ) ), st.pop() };
+}
+
+Compiler::CompilePair Compiler::CompileQuasiquote ( const Stack & st, const EnvMap & env, const FunSet & funcs )
+{
+	if ( st.empty() )
+	{
+		std::cerr << "Quote used without arguments." << std::endl;
+		return { std::nullopt, st };
+	}
+
+	return { CompileQuasiquoteAssemble( st.top(), env, funcs ), st.pop() };
+}
+
+std::optional<Stack> Compiler::CompileQuasiquoteAssemble( const Value & val, const EnvMap & env, const FunSet & funcs )
+{
+	if ( val.isNull() )
+		return Stack() . push ( Value::Instruction( NIL ) );
+
+	if ( ! val.isCons() )
+		return Stack() . push( val ) . push ( Value::Instruction( LDC ) );
+
+	if ( val.car().isSym() && val.car().sym() == "unquote" )
+		return CompileSource ( Stack( val.cdr() ), env, funcs, Stack() );
+
+	std::optional<Stack> car = CompileQuasiquoteAssemble( val.car(), env, funcs );
+	std::optional<Stack> cdr = CompileQuasiquoteAssemble( val.cdr(), env, funcs );
+
+	if ( ! ( car && cdr ) )
+		return std::nullopt;
+
+	return Stack() . push( Value::Instruction( CONS ) ) . load ( *car ) . load ( *cdr );
 }
 
 /****************************************************************************/

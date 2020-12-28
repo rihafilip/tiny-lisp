@@ -104,12 +104,21 @@ void testCompiler()
 	compile ( "(car ( + 1 2 )) (cdr ( 2 3 ))" );
 	compile( "( if 0 ( + 1 2 ) ( - 2 3) )" );
 	compile( "( if ( if ( + 2 3 ) 1 0 ) ( consp 1 ) ( consp 0 ) )" );
+
+	std::cout << "FUNCS:" << std::endl<< std::endl;
+	
 	compile( "( + 1 ((lambda (x y) (+ x y)) 10 20 ) )" );
 	compile( "( (lambda (z) ((lambda (x y) (+ y z) ) 10 20 ) ) 5 )" );
 	compile( "(defun foo (x) (+ x 1))" );
 	compile( "(defun foo (x) (+ x 1)) (foo 0)" );
 	compile ( "(lambda (x) (x))" );
 	compile( "(defun foo (x) (+ x 1)) (defun bar (y) (foo y))" );
+
+	std::cout << "QUOTES:" << std::endl<< std::endl;
+
+	compile( "`(1 (2 ,(- 4 1)))" );
+	compile( "`(1 . ,(+ 1 2 ))");
+
 
 	GC::Stop();
 }
