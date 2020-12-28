@@ -112,6 +112,9 @@ void testCompiler()
 	compile( "(defun foo (x) (+ x 1))" );
 	compile( "(defun foo (x) (+ x 1)) (foo 0)" );
 	compile ( "(lambda (x) (x))" );
+	std::cout << "Expected error:" << std::endl;
+	compile("((+ lambda (x) (x) ) 10)");
+
 	compile( "(defun foo (x) (+ x 1)) (defun bar (y) (foo y))" );
 
 	std::cout << "QUOTES:" << std::endl<< std::endl;

@@ -105,8 +105,11 @@ Value Compiler::CompileCode ( const Value & val, const EnvMap & env, const FunSe
 
 		else if ( str == "lambda" )
 		{
-			std::cerr << "Lambda definition without application." << std::endl;
-			return CompileCode( val.cdr(), env, funcs );
+			std::optional<Stack> lambda = CompileLambda( next, env, funcs );
+			if ( ! lambda  )
+				return CompileCode( val.cdr(), env, funcs );
+
+			return Value::Cons( lambda -> data(), CompileCode( val.cdr(), env, funcs ) );
 		}
 
 	}
@@ -186,7 +189,7 @@ Compiler::CompilePair Compiler::CompileToken( Stack st, const EnvMap & env, cons
 Compiler::CompilePair Compiler::CompileCons ( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
 {
 	if ( val.car().isSym() && val.car().sym() == "lambda" )
-		return CompileLambda( val, st, env, funcs );
+		return CompileLambdaApplicate( val, st, env, funcs );
 
 	return { CompileSource ( Stack( val ), env, funcs, Stack() ), st };
 }
@@ -319,18 +322,29 @@ std::optional<Stack> Compiler::CompileQuasiquoteAssemble( const Value & val, con
 
 /****************************************************************************/
 
-Compiler::CompilePair Compiler::CompileLambda ( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
+Compiler::CompilePair Compiler::CompileLambdaApplicate ( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
 {
-	std::optional<Stack> opt = CompileBody( val, env, funcs );
+	std::optional<Stack> opt = CompileLambda( val, env, funcs );
+
 	if ( ! opt )
 		return { std::nullopt, st };
 
-	Stack out = Stack()
-	 	. push( Value::Instruction( AP ) )
+	Stack acc = Stack()
+	 		. push( Value::Instruction( AP ) )
+	 		. load ( *opt );
+
+	return CompileArgsSource( st, env, funcs, acc );
+}
+
+std::optional<Stack> Compiler::CompileLambda ( const Value & val, const EnvMap & env, const FunSet & funcs )
+{
+	std::optional<Stack> opt = CompileBody( val, env, funcs );
+	if ( ! opt )
+		return std::nullopt;
+
+	return Stack()
 		. push( opt -> data() )
 		. push( Value::Instruction( LDF ) );
-
-	return CompileArgsSource( st, env, funcs, out );
 }
 
 // input (defun name (params) (body))

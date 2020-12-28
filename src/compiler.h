@@ -41,9 +41,10 @@ namespace lisp
 		static CompilePair 			CompileQuasiquote			( const Stack & st, const EnvMap & env, const FunSet & funcs );
 		static std::optional<Stack> CompileQuasiquoteAssemble	( const Value & val, const EnvMap & env, const FunSet & funcs );
 
-		static CompilePair 							CompileLambda 	( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs );
-		static std::tuple<Value, EnvMap, FunSet> 	CompileDefun 	( const Value & val, EnvMap env, FunSet funcs );
-		static std::optional<Stack> 				CompileBody 	( const Value & val, const EnvMap & env, const FunSet & funcs );
+		static CompilePair 							CompileLambdaApplicate 	( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs );
+		static std::optional<Stack> 				CompileLambda 			( const Value & val, const EnvMap & env, const FunSet & funcs );
+		static std::tuple<Value, EnvMap, FunSet> 	CompileDefun 			( const Value & val, EnvMap env, FunSet funcs );
+		static std::optional<Stack> 				CompileBody 			( const Value & val, const EnvMap & env, const FunSet & funcs );
 		///@}
 	};
 }
