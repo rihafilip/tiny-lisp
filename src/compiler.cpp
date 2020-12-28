@@ -127,9 +127,18 @@ Value Compiler::CompileCode ( const Value & val, const EnvMap & env, const FunSe
 /// one single code fragment
 std::optional<Stack> Compiler::CompileSource ( const Stack & st, const EnvMap & env, const FunSet & funcs, const Stack & acc, bool isArgs )
 {
+	if ( st.single() )
+	{
+		if ( isArgs )
+			return acc . push ( st.top() );
+		
+		std::cerr << "Non-null ending list." << std::endl;
+		return std::nullopt;
+	}
+
 	if ( st.empty() )
 	{
-		if ( isArgs  )
+		if ( isArgs )
 			return acc . push ( Value::Instruction ( NIL ) );
 		return acc;
 	}

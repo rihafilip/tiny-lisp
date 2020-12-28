@@ -83,6 +83,9 @@ void testParser()
 	std::cout << Parser::Parse( Lexer::Scan( "` ( + 10 ,(- 1 2 ) ) " ) ) << std::endl << std::endl;
 	std::cout << Parser::Parse( Lexer::Scan( "` +  '(- 1 2 ) " ) ) << std::endl << std::endl;
 
+	std::cout << Parser::Parse( Lexer::Scan( " (1 . 2 ) " ) ) << std::endl << std::endl;
+
+
 	std::cout << "Expected error: ";
 	Parser::Parse( Lexer::Scan( "( car ' (1 2 3 )" ) );
 	std::cout << std::endl;
@@ -104,6 +107,7 @@ void testCompiler()
 	compile ( "(car ( + 1 2 )) (cdr ( 2 3 ))" );
 	compile( "( if 0 ( + 1 2 ) ( - 2 3) )" );
 	compile( "( if ( if ( + 2 3 ) 1 0 ) ( consp 1 ) ( consp 0 ) )" );
+	compile ( " ( 1 . 2 ) ");
 
 	std::cout << "FUNCS:" << std::endl<< std::endl;
 	
