@@ -205,7 +205,10 @@ void Value::print ( std::ostream & os, bool list ) const
 			car() . print (os);
 			if ( ! cdr() .isNull()  )
 			{
-			 	os << " ";
+				if ( ! cdr() . isCons() )
+			 		os << " . ";
+			 	else
+			 		os << " ";
 			 	cdr() . print (os, true);
 		 	}
 
