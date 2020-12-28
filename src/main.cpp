@@ -79,6 +79,9 @@ void testParser()
 	std::cout << Parser::Parse( Lexer::Scan( "( + 1 2 )" ) ) << std::endl << std::endl;
 	std::cout << Parser::Parse( Lexer::Scan( "(car ( + 1 2 ))" ) ) << std::endl << std::endl;
 	std::cout << Parser::Parse( Lexer::Scan( "(car ( + 1 2 )) (cdr ( 2 3 )) (cdr ( 2 3 ) )" ) ) << std::endl << std::endl;
+	std::cout << Parser::Parse( Lexer::Scan( "' ( + 10 (- 1 2 ) ) " ) ) << std::endl << std::endl;
+	std::cout << Parser::Parse( Lexer::Scan( "` ( + 10 ,(- 1 2 ) ) " ) ) << std::endl << std::endl;
+	std::cout << Parser::Parse( Lexer::Scan( "` +  '(- 1 2 ) " ) ) << std::endl << std::endl;
 
 	std::cout << "Expected error: ";
 	Parser::Parse( Lexer::Scan( "( car ' (1 2 3 )" ) );

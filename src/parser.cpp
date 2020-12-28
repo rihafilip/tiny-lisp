@@ -27,7 +27,7 @@ Parser::Parser( const Value & vinput  )
 	{
 		{ "'", "quote" },
 		{ "`", "quasiquote" },
-		{ ",", "quote" }
+		{ ",", "unquote" }
 	};
 }
 
@@ -67,7 +67,7 @@ std::optional<Value> Parser::Item ()
 			std::optional<Value> cdr = Item();
 
 			if ( cdr )
-				return Value::Cons( car, *cdr );
+				return Value::Cons( car, Value::Cons ( *cdr, Value::Null() ) );
 			else
 				return std::nullopt;
 		}
