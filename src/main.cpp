@@ -105,8 +105,8 @@ void testCompiler()
 	compile( "( (lambda (z) ((lambda (x y) (+ y z) ) 10 20 ) ) 5 )" );
 	compile( "(defun foo (x) (+ x 1))" );
 	compile( "(defun foo (x) (+ x 1)) (foo 0)" );
-	// compile ( "(lambda (x) (x) )" );
-	// compile( "(defun foo (x) (+ x 1)) (defun bar (y) (- y 2))" );
+	compile ( "(lambda (x) (x))" );
+	compile( "(defun foo (x) (+ x 1)) (defun bar (y) (foo y))" );
 
 	GC::Stop();
 }

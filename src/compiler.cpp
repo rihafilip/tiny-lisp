@@ -46,7 +46,7 @@ namespace
 			max = std::max_element ( env.begin(), env.end(),
 				[] ( auto a, auto b )
 					{ return a.second.car().num() < b.second.car().num(); }
-			) -> second.cdr().car().num();
+			) -> second.cdr().num();
 
 			max++;
 		}
