@@ -34,11 +34,11 @@ namespace
 		if ( val .isNull() )
 			return enviroment;
 
-		enviroment.insert( std::make_pair ( val.car().sym(), Value::Cons( Value::Integer(0), Value::Integer(counter) ) ) );
+		enviroment.insert( { val.car().sym(), Value::Cons( Value::Integer(0), Value::Integer(counter)) });
 		return EnviromentAddValues( enviroment, val.cdr(), ++counter );
 	}
 
-	int EnviromentMax ( Compiler::EnvMap env )
+	int EnviromentNext ( Compiler::EnvMap env )
 	{
 		int max = 0;
 		if ( ! env.empty() )
@@ -47,6 +47,8 @@ namespace
 				[] ( auto a, auto b )
 					{ return a.second.car().num() < b.second.car().num(); }
 			) -> second.cdr().car().num();
+
+			max++;
 		}
 		return max;
 	}
@@ -59,193 +61,196 @@ namespace
 		set . erase ( val.car().sym() );
 		return FunctionsRemoveSymbols( set, val.cdr() );
 	}
+
+	Value ReverseList ( const Value & val )
+	{
+		if ( val.isNull() )
+			return Value::Null();
+
+		if ( ! val.isCons() )
+			return val;
+
+		if ( val.cdr().isNull() )
+			return val;
+
+		return ReverseList( val.cdr() ) . append( val.car() );
+	}
+
 } // anonymous namespace
 
 /****************************************************************************/
 
-Value Compiler::Begin ( const Value & in )
+Value Compiler::Begin ( const Value & val )
 {
-	if ( in.isNull() )
+	return CompileCode( val, EnvMap(), FunSet() );
+}
+
+/// whole input code
+Value Compiler::CompileCode ( const Value & val, const EnvMap & env, const FunSet & funcs )
+{
+	if ( val.isNull() )
 		return Value::Null();
 
-	Compiler c = Compiler (in.car());
-	Value next = Begin( in.cdr() );
-	return Value::Cons(
-		c . CompileCode() . value_or( Stack() ) . data(),
-		next
-	);
-}
+	Value next = val.car();
 
-Compiler::Compiler ( const Value & in )
-: _input ( in )
-, _envMap()
-, _functions()
-, _subroutine( false )
-{}
-
-Compiler::Compiler ( const Value & input, const EnvMap & env, const std::set<std::string> funcs, bool sub )
-: _input ( input )
-, _envMap ( env )
-, _functions( funcs )
-, _subroutine( sub )
-{}
-
-/****************************************************************************/
-
-std::optional<Stack> Compiler::CompileCode()
-{
-	if ( _input . empty() )
-		return std::nullopt;
-
-	std::optional<Stack> car = Compile();
-	if ( ! car )
-		return std::nullopt;
-
-	std::optional<Stack> cdr = CompileCode();
-	if ( ! cdr )
-		return *car;
-
-	return Stack() . load( *car ) . load ( *cdr );
-}
-
-std::optional<Stack> Compiler::CompileArgsCode( const Stack & st )
-{
-	std::optional<Stack> cdr = CompileArgsCode();
-	if ( ! cdr )
-		return std::nullopt;
-
-	return st . load ( *cdr );
-}
-
-// TODO merge with CompileCode
-std::optional<Stack> Compiler::CompileArgsCode()
-{
-	if ( _input . empty() )
-		return std::nullopt;
-
-	std::optional<Stack> carOpt = Compile();
-	if ( ! carOpt )
-		return std::nullopt;
-
-	Stack car = Stack() . push ( Value::Instruction( CONS ) ) . load ( *carOpt );
-
-	std::optional<Stack> cdr = CompileArgsCode();
-	if ( ! cdr )
-		return car . push( Value::Instruction( NIL ) );
-
-	return Stack() . load( car ) . load ( *cdr );	
-}
-
-/****************************************************************************/
-
-std::optional<Stack> Compiler::Compile()
-{
-	if ( _input . empty() )
+	if ( next.isCons() && next.car().isSym() )
 	{
-		std::cerr << "Unexpected EOF." << std::endl;
-		return std::nullopt;
+		std::string str = next.car().sym();
+		// (defun ...)
+		if ( str == "defun" )
+		{
+			auto [out, outEnv, outFuncs] = CompileDefun( next, env, funcs );
+			return Value::Cons( out, CompileCode( val.cdr(), outEnv, outFuncs ) );
+		}
+
+		else if ( str == "lambda" )
+		{
+			std::cerr << "Lambda definition without application." << std::endl;
+			return CompileCode( val.cdr(), env, funcs );
+		}
+
+	}
+	
+	std::optional<Stack> compiled = CompileSource ( Stack (next), env, funcs, Stack() );
+
+	// failed to compile, ignore
+	if ( ! compiled )
+		return CompileCode( val.cdr(), env, funcs );
+	return Value::Cons( compiled -> data(), CompileCode( val.cdr(), env, funcs ) );
+}
+
+/****************************************************************************/
+
+/// one single code fragment
+std::optional<Stack> Compiler::CompileSource ( const Stack & st, const EnvMap & env, const FunSet & funcs, const Stack & acc, bool isArgs )
+{
+	if ( st.empty() )
+	{
+		if ( isArgs  )
+			return acc . push ( Value::Instruction ( NIL ) );
+		return acc;
 	}
 
-	Value val = _input.top();
-	_input = _input.pop();
+	auto [compiled, outStack] = CompileToken( st, env, funcs );
+	if ( ! compiled )
+		return std::nullopt;
 
-	// Instruction is just pushed
+	Stack nextAcc;
+	if ( isArgs )
+		nextAcc = acc . push( Value::Instruction( CONS ) ) . load ( * compiled );
+	else
+		nextAcc = acc.load ( *compiled );
+
+	return CompileSource ( outStack, env, funcs, nextAcc, isArgs );
+}
+
+Compiler::CompilePair Compiler::CompileArgsSource ( const Stack & st, const EnvMap & env, const FunSet & funcs, const Stack & acc )
+{
+	return { CompileSource( st, env, funcs, acc, true ), Stack() };
+}
+
+Compiler::CompilePair Compiler::CompileToken( Stack st, const EnvMap & env, const FunSet & funcs )
+{
+	if ( st . empty() )
+	{
+		std::cerr << "Unexpected EOF." << std::endl;
+		return { std::nullopt, st };
+	}
+
+	Value val = st.top();
+	st = st.pop();
+
 	if ( val.isIns() )
-		Stack() . push( Value::Instruction( val.ins() ) );
+		return { Stack() . push( val ), st };
 
 	// Number is loaded via LDC
 	if ( val.isNum() )
-		return Stack() . push ( val ) . push( Value::Instruction( LDC ) ) ;
+		return { Stack() . push ( val ) . push( Value::Instruction( LDC ) ), st };
 
-	// Cons cell which means sub-list, lambda or defun
+	// Cons cell which means sub-list or lambda 
 	if ( val.isCons() )
-		return CompileCons( val );
+		return CompileCons( val, st, env, funcs );
 
 	// is Symbol
 	std::string str = val.sym();
 
 	// is built-in symbol
 	if ( tokens::isSymbol( str ) )
-		return CompileBuiltIn( str );
+		return CompileBuiltIn( str, st, env, funcs );
 
-	return CompileSymbol( str );
+	return CompileSymbol( str, st, env, funcs );
 }
 
 /****************************************************************************/
 
-std::optional<Stack> Compiler::CompileCons ( const Value & val )
+Compiler::CompilePair Compiler::CompileCons ( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
 {
-	// lambda or defun
-	// (lambda (params) (body)
-	// car -> 'lambda' | 'defun'
-	if ( val.car().isSym() )
-	{
-		std::string str = val.car().sym();
+	if ( val.car().isSym() && val.car().sym() == "lambda" )
+		return CompileLambda( val, st, env, funcs );
 
-		if ( str == "lambda" )
-			return CompileLambda( val );
-
-		else if ( str == "defun" )
-			return CompileDefun( val );
-	}
-
-	// sub-list is processed individualy
-	return Compiler( val, _envMap, _functions ) . CompileCode();
+	return { CompileSource ( Stack( val ), env, funcs, Stack() ), st };
 }
 
-std::optional<Stack> Compiler::CompileBuiltIn ( const std::string & val )
+Compiler::CompilePair Compiler::CompileBuiltIn ( const std::string & val, const Stack & st, const EnvMap & env, const FunSet & funcs  )
 {
 	// simple translation
 	std::optional<Instruction> opt = tokens::translate( val );
 	if ( opt )
-		return Stack() . push ( Value::Instruction( *opt ) );
+		return { Stack() . push ( Value::Instruction( *opt ) ), st };
 
 	if ( val == "if" )
-		return CompileIf();
+		return CompileIf( st, env, funcs );
 
-	if ( val == "quote" )
-	{
-		//TODO
-		return Stack();
-	}
+	//TODO
+	// if ( val == "quote" )
+	// 	return {std::nullopt, st};
 
-	if ( val == "quasiquote" )
-		return CompileQuasiquote();
+	// if ( val == "quasiquote" )
+	// 	return {std::nullopt, st};
 
 	if ( val == "unquote" )
 	{
 		std::cerr << "Unquote not in quasiquote." << std::endl;
-		return std::nullopt;
+		return {std::nullopt, st};
+	}
+
+	if ( val == "defun" )
+	{
+		std::cerr << "Defun can be only used in a global scope." << std::endl;
+		return {std::nullopt, st};
 	}
 
 	// shouldn't occur
 	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
-	return std::nullopt;
+	return { std::nullopt, st };
 }
 
 
-std::optional<Stack> Compiler::CompileSymbol ( const std::string & val )
+Compiler::CompilePair Compiler::CompileSymbol ( const std::string & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
 {
-	if ( _envMap.count( val ) )
+	if ( env.count( val ) )
 	{
-		Stack output = Stack() . push ( _envMap.at(val) ) . push( Value::Instruction(LD) );
-		if ( _functions.count( val ) )
-			return CompileArgsCode( Stack() . push( Value::Instruction( AP ) ) . load ( output ) );
+		Stack output = Stack() . push ( env.at(val) ) . push( Value::Instruction(LD) );
+		if ( funcs.count( val ) )
+		{
+			output = Stack() . push( Value::Instruction( AP ) ) . load ( output );
+			return CompileArgsSource( st, env, funcs, output );
+		}
 
-		return output;
+		return { output, st };
 	}
  
 	std::cerr << "Token '" << val << "' is not defined." << std::endl;
-	return std::nullopt;
+	return { std::nullopt, st };
 }
 
 /****************************************************************************/
 
-std::optional<Stack> Compiler::CompileIf ()
+Compiler::CompilePair Compiler::CompileIf ( const Stack & st, const EnvMap & env, const FunSet & funcs )
 {
-	std::optional<Stack> opt1 = Compile();
-	std::optional<Stack> opt2 = Compile();
-	std::optional<Stack> opt3 = Compile();
+	auto [opt1, st1] = CompileToken( st, env, funcs );
+	auto [opt2, st2] = CompileToken( st1, env, funcs );
+	auto [opt3, st3] = CompileToken( st2, env, funcs );
 
 	if ( ! ( opt1 && opt2 && opt3 ) )
 	{
@@ -253,7 +258,7 @@ std::optional<Stack> Compiler::CompileIf ()
 		<< opt1.has_value() + opt2.has_value() + opt3.has_value()
 		<< "." << std::endl;
 
-		return std::nullopt;
+		return { std::nullopt, st };
 	}
 
 	Stack joinStack = Stack() . push ( Value::Instruction( JOIN ) );
@@ -262,65 +267,56 @@ std::optional<Stack> Compiler::CompileIf ()
 	Stack arg2 = joinStack . load ( *opt2 );
 	Stack arg3 = joinStack . load ( *opt3 );
 
-	return Stack()
+	Stack output = Stack()
 		. push ( arg3.data() )
 		. push ( arg2.data() )
 		. push( Value::Instruction( SEL ) )
-		. push ( arg1.data() );
-}
+		. load ( arg1 );
 
-std::optional<Stack> Compiler::CompileQuasiquote ()
-{
-	//TODO
-	return Stack();
+	return { output, st3 };
 }
 
 /****************************************************************************/
 
-std::optional<Stack> Compiler::CompileLambda ( const Value & val )
+Compiler::CompilePair Compiler::CompileLambda ( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
 {
-	std::optional<Stack> out = CompileFunction( val );
-	if ( ! out )
-		return std::nullopt;
+	std::optional<Stack> opt = CompileBody( val, env, funcs );
+	if ( ! opt )
+		return { std::nullopt, st };
 
-	return CompileArgsCode(
-		Stack()
+	Stack out = Stack()
 	 	. push( Value::Instruction( AP ) )
-		. push( out -> data() )
-		. push( Value::Instruction( LDF ) )
-	);
+		. push( opt -> data() )
+		. push( Value::Instruction( LDF ) );
+
+	return CompileArgsSource( st, env, funcs, out );
 }
 
 // input (defun name (params) (body))
-std::optional<Stack> Compiler::CompileDefun ( const Value & val )
+std::tuple<Value, Compiler::EnvMap, Compiler::FunSet> Compiler::CompileDefun ( const Value & val, EnvMap env, FunSet funcs )
 {
-	if ( _subroutine )
-	{
-		std::cerr << "Defun can be only used in a global scope." << std::endl;
-		return std::nullopt;
-	}
-
 	if ( ! ( val.cdr().isCons() && val.cdr().car().isSym() ))
 	{
 		std::cerr << "Wrong structure of defun." << std::endl;
-		return std::nullopt;
+		return { Value::Null(), env, funcs };
 	}
 
 	std::string name = val.cdr().car().sym();
 
-	std::optional<Stack> lambda = CompileFunction( val.cdr() );
-	if ( ! lambda )
-		return std::nullopt;
+	std::optional<Stack> body = CompileBody( val.cdr(), env, funcs );
+	if ( ! body )
+		return { Value::Null(), env, funcs };
 
 	// Add function to enviroment
-	int max = EnviromentMax( _envMap );
-	_envMap.insert( std::make_pair ( name, Value::Cons( Value::Integer(0), Value::Integer( ++max ) ) ) );
+	int index = EnviromentNext( env );
+	env.insert( { name, Value::Cons( Value::Integer(0), Value::Integer( index ) ) } );
+	funcs.insert ( name );
 
-	return Stack() . push( lambda -> data() ) . push( Value::Instruction( DEFUN ) );
+	return { Stack() . push( body -> data() ) . push( Value::Instruction( DEFUN ) ) . data(), env, funcs };
 }
 
 // input (symbol (params) (body))
-std::optional<Stack> Compiler::CompileFunction ( const Value & val )
+std::optional<Stack> Compiler::CompileBody ( const Value & val, const EnvMap & env, const FunSet & funcs )
 {
 	// correct structure
 	if ( !(	val.cdr().isCons() // ( (params) . ( (body) . nil ) )
@@ -328,17 +324,17 @@ std::optional<Stack> Compiler::CompileFunction ( const Value & val )
 		&& 	val.cdr().cdr().cdr().isNull() // nil
 	))
 	{
-		std::cerr << "Wrong structure of lambda." << std::endl;
+		std::cerr << "Wrong structure of function body." << std::endl;
 		return std::nullopt;
 	}
 
 	Value params = val.cdr().car();
+	EnvMap nextEnv = EnviromentAddValues( ShiftEnviroment( env ), params );
+	std::set<std::string> nextFuncs = FunctionsRemoveSymbols( funcs, params );
+
 	Value body = val.cdr().cdr().car();
 
-	EnvMap env = EnviromentAddValues( ShiftEnviroment(_envMap), params );
-	std::set<std::string> funcs = FunctionsRemoveSymbols( _functions, params );
-
-	std::optional<Stack> compiledBodyOpt = Compiler( body, env, funcs, true ) . CompileCode();
+	std::optional<Stack> compiledBodyOpt = CompileSource ( Stack( body ), nextEnv, nextFuncs, Stack() );
 
 	if ( ! compiledBodyOpt )
 		return std::nullopt;
