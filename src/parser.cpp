@@ -114,6 +114,10 @@ std::optional<Value> Parser::List ()
 			top = input.top();
 			if ( ! top.isSym() || top.sym() != ")" )
 				return error( "Expected ')' after cons." );
+
+			input = input . pop();
+
+			return *next;
 		}
 	}
 
