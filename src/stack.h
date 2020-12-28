@@ -27,6 +27,9 @@ namespace lisp
 		/// Returns true if stack is empty
 		bool empty () const;
 
+		// Returns true if stack is at end of non-nil ending list
+		bool single() const;
+
 		/// Returns stack with input on top of *this
 		Stack load ( const Stack & input ) const;
 

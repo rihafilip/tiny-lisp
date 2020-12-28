@@ -26,6 +26,10 @@ Value Stack::top () const
 	if ( empty() )
 		return Value::Null();
 
+	// Non-nil ending list
+	if ( ! _data.isCons() )
+		return _data;
+
 	return _data.car();
 }
 
@@ -34,7 +38,7 @@ Stack Stack::pop () const
 	if ( empty() )
 		return *this;
 
-	// corrupoted stack
+	// Non-nil ending list
 	if ( ! _data.isCons() )
 		return Stack();
 
@@ -44,6 +48,11 @@ Stack Stack::pop () const
 bool Stack::empty() const
 {
 	return _data . isNull();
+}
+
+bool Stack::single() const
+{
+	return ! ( _data.isCons() || _data.isNull() );
 }
 
 Stack Stack::load ( const Stack & input ) const
