@@ -62,7 +62,7 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		{
 			Value rhs = _s.top();
 			Value lhs = _s.pop().top();
-			return Registers( _s.pop().pop().push( Value::Cons( lhs, rhs ) ) , _e, _c, _d );
+			return Registers( _s.pop().pop().push( Value::Cons( rhs, lhs ) ) , _e, _c, _d );
 		}
 
 		case CAR:
@@ -137,25 +137,37 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		}
 
 		case LDF:
-			return Registers( _s.push( Value::Closure( _c.top(), _e.data() ) ), _e, _c.pop(), _d );
+		{
+			Value enviroment = _e.data();
+			Value code = _c.top();
+
+			return Registers( _s.push( Value::Closure( code, enviroment ) ), _e, _c.pop(), _d );
+		}
 
 		case DEFUN:
-			return Registers( _s, _e.add ( Value::Closure( _c.top(), _e.data() ) ), _c.pop(), _d );
+		{
+			Value enviroment = _e.data();
+			Value code = _c.top();
 
-		// Load closure from stack
+			return Registers( _s, _e.add ( Value::Closure( code, enviroment ) ), _c.pop(), _d );
+		}
+
+		// Load closure and arguments from stack
 		// stack = empty
-		// enviroment = closure.cdr
+		// enviroment = closure.cdr + args
 		// code = closure.car
 		// to dump is pushed ( stack enviroment . code )
 		case AP:
 		{
 			Value clos = _s.top();
+			Value args = _s.pop().top();
+
 			return Registers (
 				Stack(),
-				Enviroment ( clos.cdr() ) ,
+				Enviroment( clos . cdr() ) . shifted() . setZeroDepth ( args ) ,
 				Stack( clos.car() ),
 				_d.push(
-					Value::Cons( _s.pop().data(),
+					Value::Cons( _s.pop().pop().data(),
 						Value::Cons( _e.data(),
 							_c.data() ) ) )
 			);
@@ -179,6 +191,10 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		case READ:
 			return Registers( _s, _e, _d, _c );
 	}
+
+	// shouln't occurr
+	std::cerr << "Unknown instruction." << std::endl;
+	return std::nullopt;
 }
 
 std::optional<Runtime::Registers> Runtime::binaryOperator ( Instruction ins, const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
@@ -217,6 +233,8 @@ std::optional<Runtime::Registers> Runtime::binaryOperator ( Instruction ins, con
 		case MORE:
 			out = rhs > lhs ? 1 : 0;
 			break;
+		default:
+			break;
 	}
 
 	return Registers( _s.pop().pop().push(Value::Integer(out)), _e, _c, _d );
@@ -229,12 +247,15 @@ std::optional<Runtime::Registers> Runtime::equals ( const Stack & _s, const Envi
 	// Value lhs = _s.pop().top();
 
 	// if ( rhs == lhs )
+	// 
+	return std::nullopt;
 }
 
 void Runtime::print ( const Stack & s )
 {
-	if ( s.empty() )
-		std::cout << "null";
+	if ( s.top().isNull()  )
+		return;
 
-	std::cout << s.top();		
+	std::cout << s.top() << " ";		
+
 }
