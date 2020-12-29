@@ -2,54 +2,51 @@
 #include <iostream>
 #include <string>
 
-namespace lisp
+namespace lisp::secd
 {
-	namespace secd
+	enum Instruction
 	{
-		enum Instruction
-		{
-			// load constants
-			LDC,
-			NIL,
+		// load constants
+		LDC,
+		NIL,
 
-			// arithmetic
-			ADD,
-			SUB,
-			MUL,
-			DIV,
+		// arithmetic
+		ADD,
+		SUB,
+		MUL,
+		DIV,
 
-			// comparison
-			LESS,
-			MORE,
-			EQ,
+		// comparison
+		LESS,
+		MORE,
+		EQ,
 
-			// list
-			CONS,
-			CAR,
-			CDR,
+		// list
+		CONS,
+		CAR,
+		CDR,
 
-			// type identify
-			CONSP,
+		// type identify
+		CONSP,
 
-			// if
-			SEL,
-			JOIN,
+		// if
+		SEL,
+		JOIN,
 
-			// aditional loading
-			LD,
-			LDF,
+		// aditional loading
+		LD,
+		LDF,
 
-			// function
-			AP,
-			RTN,
-			DEFUN,
+		// function
+		AP,
+		RTN,
+		DEFUN,
 
-			//IO
-			PRINT,
-			READ
-		};
+		//IO
+		PRINT,
+		READ
+	};
 
-		std::string toString ( Instruction ins );
-		std::ostream & operator<< ( std::ostream & os, Instruction ins );
-	}
+	std::string toString ( Instruction ins );
+	std::ostream & operator<< ( std::ostream & os, Instruction ins );
 }
