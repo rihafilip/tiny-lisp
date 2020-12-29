@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "compiler.h"
+#include "runtime.h"
 #include <cassert>
 #include <stdexcept>
 using namespace lisp;
@@ -61,7 +62,6 @@ void testValue ()
 
 void testLexer ()
 {
-	GC::Start();
 	Value out = Lexer::Scan( "( defun (addtwelve x) (+ x 12))" );
 	std::cout << "expression: " << out << std::endl << std::endl;
 
@@ -70,12 +70,10 @@ void testLexer ()
 
 	out = Lexer::Scan( "(((((((((((((((((((((((((((((((((())))))))))))))))))))))))))))))))))" );
 	std::cout << "expression: " << out << std::endl << std::endl;
-	GC::Stop();
 }
 
 void testParser()
 {
-	GC::Start();
 	std::cout << Parser::Parse( Lexer::Scan( "( + 1 2 )" ) ) << std::endl << std::endl;
 	std::cout << Parser::Parse( Lexer::Scan( "(car ( + 1 2 ))" ) ) << std::endl << std::endl;
 	std::cout << Parser::Parse( Lexer::Scan( "(car ( + 1 2 )) (cdr ( 2 3 )) (cdr ( 2 3 ) )" ) ) << std::endl << std::endl;
@@ -89,8 +87,6 @@ void testParser()
 	std::cout << "Expected error: ";
 	Parser::Parse( Lexer::Scan( "( car ' (1 2 3 )" ) );
 	std::cout << std::endl;
-
-	GC::Stop();
 }
 
 void compile ( std::string str )
@@ -101,8 +97,6 @@ void compile ( std::string str )
 
 void testCompiler()
 {
-	GC::Start();
-
 	compile( "( + 1 2 )" );
 	compile ( "(car ( + 1 2 )) (cdr ( 2 3 ))" );
 	compile( "( if 0 ( + 1 2 ) ( - 2 3) )" );
@@ -125,17 +119,34 @@ void testCompiler()
 
 	compile( "`(1 (2 ,(- 4 1)))" );
 	compile( "`(1 . ,(+ 1 2 ))");
+}
 
+void exec ( const std::string & str )
+{
+	std::cout << "input " << str << std::endl;
+	std::cout << "compiled " << Compiler::Begin( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl;
+	lisp::secd::Runtime::executeCode( Stack ( Compiler::Begin( Parser::Parse( Lexer::Scan( str ) ) ) ) );
 
-	GC::Stop();
+	std::cout << std::endl << std::endl;
+}
+
+void testRuntime ()
+{
+	exec ( "( + 1 2 )" );
+	exec( "( if 0 ( + 1 2 ) ( - 2 3) )" );
+	exec( "( if ( if ( + 2 3 ) 0 1 ) ( consp 1 ) ( consp ( 0 1 ) ) )" );
 }
 
 int main(int argc, char const *argv[])
 {
-	testGC();
-	testValue();
-	testLexer();
-	testParser();
-	testCompiler();
+	// testGC();
+	// testValue();
+	GC::Start();
+	// testLexer();
+	// testParser();
+	// testCompiler();
+	testRuntime();
+
+	GC::Stop();
 	return 0;
 }
