@@ -5,6 +5,16 @@
 using namespace lisp;
 using namespace lisp::secd;
 
+/*
+TODO
+lambda and defun have correct number of arguments
+apply the first symbol
+after the first symbol, everything is list
+	(if + - * / just ldc )
+LET
+CONSP compile next as args
+ */
+
 // enviroment and functions helpers
 namespace
 {
