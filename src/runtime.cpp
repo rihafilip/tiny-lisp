@@ -188,8 +188,10 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 
 		// TODO
 		case PRINT:
+			print (_s);
+			return Registers( _s.pop(), _e, _c, _d );
 		case READ:
-			return Registers( _s, _e, _d, _c );
+			return Registers( _s . push( read() ), _e, _c, _d );
 	}
 
 	// shouln't occurr
@@ -257,5 +259,18 @@ void Runtime::print ( const Stack & s )
 		return;
 
 	std::cout << s.top() << " ";		
+}
 
+Value Runtime::read ()
+{
+	std::string input;
+	std::cin >> input;
+
+	if ( ! input.empty()
+		&& ( isdigit(input[0]) || input[0] == '-' )
+		&& input.find_first_not_of( "0123456789" ) == std::string::npos
+	)
+		return Value::Integer( stoi( input ) );
+
+	return Value::Symbol(input);
 }

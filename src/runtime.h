@@ -36,5 +36,6 @@ namespace lisp::secd
 		static std::optional<Registers> equals ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
 
 		static void print ( const Stack & s );
+		static Value read ();
 	};
 }
