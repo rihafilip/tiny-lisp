@@ -40,8 +40,18 @@ std::optional<Value> Enviroment::onIndexDeep ( int index, const Value & curr ) c
 
 Enviroment Enviroment::add ( const Value & val ) const
 {
-	return Enviroment ( m_Map.car().append ( val ) );
+	// if ( m_Map.car().isNull() && ! val.isNull() )
+	// 	return Enviroment( Value::Cons( Value::Cons( val, Value::Null() ), m_Map.cdr() ) );
+
+	return Enviroment ( Value::Cons ( m_Map.car().append ( Value::Cons( val, Value::Null() ) ), m_Map.cdr() ) );
 }
+
+Enviroment Enviroment::setZeroDepth ( const Value & val ) const
+{
+	return Enviroment( Value::Cons( val, m_Map.cdr() ) );
+}
+
+/********************************************************************/
 
 Enviroment Enviroment::shifted () const
 {
@@ -52,4 +62,23 @@ Enviroment Enviroment::shifted () const
 Value Enviroment::data () const
 {
 	return m_Map;
+}
+
+namespace lisp
+{
+	std::ostream & operator<< ( std::ostream & os, const Enviroment & env )
+	{
+		Enviroment::print( os, 0, env.m_Map );
+		return os;
+	}
+}
+
+void Enviroment::print ( std::ostream & os, int depth, const Value & val )
+{
+	if ( val.isNull() )
+		return;
+
+	os << depth << ": " << val.car();
+	os << std::endl;
+	return print( os, ++depth, val.cdr() );
 }
