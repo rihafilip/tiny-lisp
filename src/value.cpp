@@ -198,11 +198,15 @@ void Value::print ( std::ostream & os, bool list ) const
 			break;
 
 		case GC::MemoryType::CLOS:
-			os << "<procedure: ";
+			os << "<procedure";
+		#ifdef DBG
+			os << ": ";
 			car().print(os);
 			os << ", env: ";
 			cdr().print(os);
-			os << " >";
+			os << " ";
+		#endif
+			os << ">";
 			break;
 			
 		case GC::MemoryType::CONS:
