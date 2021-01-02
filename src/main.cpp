@@ -152,8 +152,36 @@ void exec ( const std::string & str )
 void testRuntime ()
 {
 	exec ( "( + 1 2 )" );
+	exec ( "( + 1 2 ) ( - 1 2 )" );
 	exec( "( if 0 ( + 1 2 ) ( - 2 3) )" );
-	exec( "( if ( if ( + 2 3 ) 0 1 ) ( consp 1 ) ( consp ( 0 1 ) ) )" );
+	exec( "( if ( if ( + 2 3 ) 0 1 ) ( consp 1 ) ( consp '( 0 1 ) ) )" );
+
+	exec( "( + ((lambda (x y) (+ x y)) 10 20 ) 1 )" );
+	exec( "( (lambda (z) ((lambda (x y) (+ y z) ) 10 20 ) ) 5 )" );
+	exec ( "(lambda (x) (x))" );
+	exec ( "((lambda (x) x) 10)" );
+
+	std::cout << "Expected error:" << std::endl;
+	try
+	{
+		exec ( "((lambda (x) (x)) 10)" );
+	}
+	catch ( std::runtime_error & e )
+	{}
+
+	std::cout << std::endl;
+	
+
+	exec( "(defun foo (x) (+ x 1))" );
+	exec( "(defun foo (x) (+ x 1)) (foo 0)" );
+	exec( "(defun foo (x) (+ x 1)) (defun bar (y) (- 10 (foo y)) ) (bar 5)" );
+	exec( "(defun foo (x) (+ x 1)) (- 4 (foo 2))" );
+
+	exec( "(print 'hello 'world) ");
+	exec( "(print (read)) ");
+	exec( "(+ 10 (read))" );
+	
+	exec( "(defun foo (x) (+ x 1)) ((lambda (x y) (x (+ y 10)) ) foo 10)" );	
 }
 
 int main(int argc, char const *argv[])

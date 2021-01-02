@@ -543,7 +543,11 @@ std::optional<Stack> Compiler::CompileBody ( const Stack & st, const EnvMap & en
 
 	Value body = st.pop().top();
 
-	std::optional<Stack> compiledBodyOpt = CompileArguments ( Stack( body ), nextEnv, Stack() );
+	std::optional<Stack> compiledBodyOpt;
+	if ( body.isCons() )
+		compiledBodyOpt = CompileCall ( Stack( body ), nextEnv );
+	else
+		compiledBodyOpt = CompileArguments ( Stack().push( body ), nextEnv, Stack() );
 
 	if ( ! compiledBodyOpt )
 		return std::nullopt;
