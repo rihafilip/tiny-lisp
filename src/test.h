@@ -93,7 +93,7 @@ void testParser()
 void compile ( std::string str )
 {
 	std::cout << "input " << str << std::endl;
-	std::cout << Compiler::Begin( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl << std::endl;	
+	std::cout << Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl << std::endl;	
 }
 
 void testCompiler()
@@ -144,8 +144,8 @@ void testCompiler()
 void exec ( const std::string & str )
 {
 	std::cout << "input " << str << std::endl;
-	std::cout << "compiled " << Compiler::Begin( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl;
-	lisp::secd::Runtime::executeCode( Stack ( Compiler::Begin( Parser::Parse( Lexer::Scan( str ) ) ) ) );
+	std::cout << "compiled " << Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl;
+	lisp::secd::Runtime::executeCode( Stack ( Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ) ) );
 
 	std::cout << std::endl << std::endl;
 }

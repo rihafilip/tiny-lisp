@@ -66,12 +66,6 @@ namespace
 
 /****************************************************************************/
 
-Value Compiler::Begin ( const Value & val )
-{
-	return CompileCode( val, EnvMap() );
-}
-
-/// whole input code
 Value Compiler::CompileCode ( const Value & lst, const EnvMap & env )
 {
 	if ( lst.isNull() )
