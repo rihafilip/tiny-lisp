@@ -330,6 +330,9 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 	if ( val == "lambda" )
 		return CompileLambda ( st, env );
 
+	if ( val == "let" )
+		return CompileLet( st, env );
+
 	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
 	return std::nullopt;
 }
@@ -387,6 +390,70 @@ std::optional<Stack> Compiler::CompileIf ( const Stack & st, const EnvMap & env 
 		. push( Value::Instruction( SEL ) )
 		. load ( arg1 );
 }
+
+std::optional<Stack> Compiler::CompileLet ( const Stack & st, const EnvMap & env )
+{
+	if ( st.empty() || st.pop().empty() || ! st.pop().pop().empty() )
+	{
+		std::cerr << "Let has incorrect number of arguments." << std::endl;
+		return std::nullopt;
+	}
+
+	Value args = st.top();
+	Value body = st.pop().top();
+
+	auto [ optArgsBodies, argsNames ] = CompileLetArgs( Stack(args), Value::Null(), Value::Null() );
+
+	if ( ! optArgsBodies )
+		return std::nullopt;
+
+	std::cout << "args names: "  << argsNames<< std::endl;
+	std::cout << "args bodies: " << *optArgsBodies << std::endl;
+
+	EnvMap nextEnv = EnviromentAddValues( ShiftEnviroment( env ), argsNames );
+
+	std::optional<Stack> compiledBody;
+	if ( body.isCons() )
+		compiledBody = CompileCall( Stack( body ), nextEnv );
+	else
+		compiledBody = CompileArguments ( Stack() . push( body ), nextEnv, Stack() );
+
+	if ( ! compiledBody )
+		return std::nullopt;
+
+	Stack outAccumulator = Stack()
+		.push( Value::Instruction( AP ) )
+		.push( compiledBody -> data() )
+		.push( Value::Instruction( LDF ) );
+
+	return CompileArgumentsList ( Stack ( *optArgsBodies ), env, outAccumulator );
+}
+
+std::pair<std::optional<Value>, Value> Compiler::CompileLetArgs ( const Stack & st, const Value & bodies, const Value & names )
+{
+	if ( st.empty() )
+		return { bodies, names };
+
+	Value next = st.top();
+
+	if ( ! ( next.isCons()
+		&& next.car().isSym()
+		&& next.cdr().isCons()
+		&& next.cdr().cdr().isNull() )
+	)
+	{
+		std::cerr << "Let argument '" << next << "' is in invalid form." << std::endl;
+		return { std::nullopt, names };
+	}
+
+	Value nextName = next.car();
+	Value nextBody = next.cdr().car();
+
+	return CompileLetArgs( st.pop(), Value::Cons( nextBody, bodies ), Value::Cons( nextName, names ) );
+}
+
+/****************************************************************************/
+
 
 std::optional<Stack> Compiler::CompileQuote ( const Stack & st, const EnvMap & env )
 {

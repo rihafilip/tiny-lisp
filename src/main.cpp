@@ -118,7 +118,7 @@ void testCompiler()
 	compile( "(defun foo (x) (+ x 1)) (foo 0)" );
 
 	compile ( "(lambda (x) (x))" );
-	
+
 	std::cout << "Expected error:" << std::endl;
 	compile("((+ lambda (x) ) 10)");
 
@@ -128,9 +128,16 @@ void testCompiler()
 
 	compile( "`(1 (2 ,(- 4 1)))" );
 	compile( "`(1 . ,(+ 1 2 ))");
+	compile( "'()");
 	compile( "(defun foo (x) (x)) `(+ 3 ,foo 15) " );
 	compile( "(defun foo (x) (x)) `(+ 3 ,(foo 15)) " );
 	compile( "(print 'hello 'world)" );
+
+	std::cout << "LET:" << std::endl<< std::endl;
+	compile( "(let ((x 10)) (+ x 10))" );
+	compile( "(let ((x 10) (y 20) (z 30)) ( `(,x ,y ,z) ))" );
+
+	compile( "(let ((x 10)) (+ x (let ((x 20)) x) ))" );
 }
 
 void exec ( const std::string & str )

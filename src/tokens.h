@@ -29,6 +29,7 @@ namespace lisp::tokens
     	"unquote",
 
     	"if",
+        "let",
 
         // defining
     	"defun",

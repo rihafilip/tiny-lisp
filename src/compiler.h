@@ -37,6 +37,9 @@ namespace lisp
 		static std::optional<Stack> CompileSymbol ( const std::string & val, const Stack & st, const EnvMap & env );
 
 		static std::optional<Stack> CompileIf ( const Stack & st, const EnvMap & env );
+		static std::optional<Stack> CompileLet ( const Stack & st, const EnvMap & env );
+		static std::pair<std::optional<Value>, Value> CompileLetArgs ( const Stack & st, const Value & bodies, const Value & names );
+
 		static std::optional<Stack> CompileQuote ( const Stack & st, const EnvMap & env );
 		static std::optional<Stack> CompileQuasiquote ( const Stack & st, const EnvMap & env );
 		static std::optional<Stack> CompileQuasiquoteAssemble( const Value & val, const EnvMap & env );
