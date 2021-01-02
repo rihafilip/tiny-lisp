@@ -46,5 +46,7 @@ namespace lisp
 		static std::tuple<Value, Compiler::EnvMap> CompileDefun ( const Value & val, EnvMap env  );
 		static std::optional<Stack> CompileBody ( const Stack & st, const EnvMap & env );
 		/// @}
+		
+		static bool AssertArgsCount( int num, const Stack & val );
 	};
 }

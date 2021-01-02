@@ -7,7 +7,6 @@ using namespace lisp::secd;
 
 /*
 TODO
-assert correct number of arguments
 LET
  */
 
@@ -260,7 +259,46 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 	std::optional<Instruction> opt = tokens::translate( val );
 	if ( opt )
 	{
-		//TODO check correct number of arguments
+		bool correct;
+		switch( *opt )
+		{
+			case ADD:
+			case SUB:
+			case MUL:
+			case DIV:
+			case EQ:
+			case LESS:
+			case MORE:
+				correct = AssertArgsCount( 2, st );
+				break;
+
+			case CONS:
+			case CAR:
+			case CDR:
+			case CONSP:
+				correct = AssertArgsCount( 1, st );
+				break;
+
+			case NIL:
+			case READ:
+				correct = AssertArgsCount( 0, st );
+				break;
+
+			case PRINT: // print can have any n8mber of arguments
+				correct = true;
+				break;
+
+			default:
+				std::cerr << "Unhandeled simple translate args count." << std::endl;
+				return std::nullopt;
+		}
+
+		if ( ! correct )
+		{
+			std::cerr << *opt << " has incorrect number of arguments." << std::endl;
+			return std::nullopt;	
+		}
+
 		Stack output = Stack() . push ( Value::Instruction( *opt ) );
 		if ( *opt == PRINT )
 			return CompileArgumentsList( st, env, output );
@@ -294,6 +332,16 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 
 	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
 	return std::nullopt;
+}
+
+bool Compiler::AssertArgsCount( int num, const Stack & val )
+{
+	if ( ! num )
+		return val.empty();
+	else if ( val.empty() )
+		return false;
+
+	return AssertArgsCount( --num, val.pop() );
 }
 
 /****************************************************************************/
