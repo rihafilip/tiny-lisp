@@ -11,7 +11,6 @@ namespace lisp
 	{
 	public:
 		typedef std::map<std::string, Value> EnvMap;
-		typedef std::pair<std::optional<Stack>, Stack> CompilePair;
 	
 		static Value Begin ( const Value & val );
 		static Value CompileCode ( const Value & lst, const EnvMap & env );
