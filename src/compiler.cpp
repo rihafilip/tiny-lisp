@@ -7,12 +7,8 @@ using namespace lisp::secd;
 
 /*
 TODO
-lambda and defun have correct number of arguments
-apply the first symbol
-after the first symbol, everything is list
-	(if + - * / just ldc )
+assert correct number of arguments
 LET
-CONSP compile next as args
  */
 
 // enviroment and functions helpers
@@ -39,6 +35,13 @@ namespace
 		return out;
 	}
 
+	/**
+	 * add list of values to enviroment
+	 * @param  enviroment input enviroment
+	 * @param  val        list of values
+	 * @param  counter    index of first variable
+	 * @return            new variable
+	 */
 	Compiler::EnvMap EnviromentAddValues(Compiler:: EnvMap enviroment, const Value & val, int counter = 0 )
 	{
 		if ( val .isNull() )
@@ -48,6 +51,7 @@ namespace
 		return EnviromentAddValues( enviroment, val.cdr(), ++counter );
 	}
 
+	/// Returns index of the next value to be added to enviroment
 	int EnviromentNext ( Compiler::EnvMap env )
 	{
 		int max = 0;
@@ -62,225 +66,266 @@ namespace
 		}
 		return max;
 	}
-
-	std::set<std::string> FunctionsRemoveSymbols ( std::set<std::string> set, const Value & val )
-	{
-		if ( val.isNull() )
-			return set;
-
-		set . erase ( val.car().sym() );
-		return FunctionsRemoveSymbols( set, val.cdr() );
-	}
-
-	Value ReverseList ( const Value & val )
-	{
-		if ( val.isNull() )
-			return Value::Null();
-
-		if ( ! val.isCons() )
-			return val;
-
-		if ( val.cdr().isNull() )
-			return val;
-
-		return ReverseList( val.cdr() ) . append( val.car() );
-	}
-
 } // anonymous namespace
 
 /****************************************************************************/
 
 Value Compiler::Begin ( const Value & val )
 {
-	return CompileCode( val, EnvMap(), FunSet() );
+	return CompileCode( val, EnvMap() );
 }
 
 /// whole input code
-Value Compiler::CompileCode ( const Value & val, const EnvMap & env, const FunSet & funcs )
+Value Compiler::CompileCode ( const Value & lst, const EnvMap & env )
 {
-	if ( val.isNull() )
+	if ( lst.isNull() )
 		return Value::Null();
 
-	Value next = val.car();
+	Value next = lst.car();
 
-	if ( next.isCons() && next.car().isSym() )
+	if ( next.isCons() )
 	{
-		std::string str = next.car().sym();
 		// (defun ...)
-		if ( str == "defun" )
+		if ( next.car().isSym() && next.car().sym() == "defun" )
 		{
-			auto [out, outEnv, outFuncs] = CompileDefun( next, env, funcs );
-			return Value::Cons( out, CompileCode( val.cdr(), outEnv, outFuncs ) );
+			auto [out, outEnv] = CompileDefun( next, env );
+			return Value::Cons( out, CompileCode( lst.cdr(), outEnv ) );
 		}
 
-		else if ( str == "lambda" )
-		{
-			std::optional<Stack> lambda = CompileLambda( next, env, funcs );
-			if ( ! lambda  )
-				return CompileCode( val.cdr(), env, funcs );
+		// cons -> Applicate
+		std::optional<Stack> compiled = CompileCall ( Stack (next), env );
 
-			return Value::Cons( lambda -> data(), CompileCode( val.cdr(), env, funcs ) );
-		}
-
+		// failed to compile, ignore
+		if ( ! compiled )
+			return CompileCode( lst.cdr(), env );
+		return Value::Cons( compiled -> data(), CompileCode( lst.cdr(), env ) );
 	}
-	
-	std::optional<Stack> compiled = CompileSource ( Stack (next), env, funcs, Stack() );
+
+	// simple compile
+	std::optional<Stack> compiled = CompileArguments ( Stack (next), env, Stack() );
 
 	// failed to compile, ignore
 	if ( ! compiled )
-		return CompileCode( val.cdr(), env, funcs );
-	return Value::Cons( compiled -> data(), CompileCode( val.cdr(), env, funcs ) );
+		return CompileCode( lst.cdr(), env );
+	return Value::Cons( compiled -> data(), CompileCode( lst.cdr(), env ) );
 }
 
 /****************************************************************************/
 
-/// one single code fragment
-std::optional<Stack> Compiler::CompileSource ( const Stack & st, const EnvMap & env, const FunSet & funcs, const Stack & acc, bool isArgs )
-{
-	if ( st.single() )
-	{
-		if ( isArgs )
-			return acc . push ( st.top() );
-		
-		std::cerr << "Non-null ending list." << std::endl;
-		return std::nullopt;
-	}
-
-	if ( st.empty() )
-	{
-		if ( isArgs )
-			return acc . push ( Value::Instruction ( NIL ) );
-		return acc;
-	}
-
-	auto [compiled, outStack] = CompileToken( st, env, funcs );
-	if ( ! compiled )
-		return std::nullopt;
-
-	Stack nextAcc;
-	if ( isArgs )
-		nextAcc = acc . push( Value::Instruction( CONS ) ) . load ( * compiled );
-	else
-		nextAcc = acc.load ( *compiled );
-
-	return CompileSource ( outStack, env, funcs, nextAcc, isArgs );
-}
-
-Compiler::CompilePair Compiler::CompileArgsSource ( const Stack & st, const EnvMap & env, const FunSet & funcs, const Stack & acc )
-{
-	return { CompileSource( st, env, funcs, acc, true ), Stack() };
-}
-
-Compiler::CompilePair Compiler::CompileToken( Stack st, const EnvMap & env, const FunSet & funcs )
+std::optional<Stack> Compiler::CompileCall ( Stack st, const EnvMap & env )
 {
 	if ( st . empty() )
 	{
-		std::cerr << "Unexpected EOF." << std::endl;
-		return { std::nullopt, st };
+		std::cerr << "Incorrect application of empty list." << std::endl;
+		return std::nullopt;
 	}
 
 	Value val = st.top();
 	st = st.pop();
 
-	if ( val.isIns() )
-		return { Stack() . push( val ), st };
+	if ( val.isNum() )
+	{
+		std::cerr << "Number cannot be applied." << std::endl;
+		return std::nullopt;
+	}
+
+	// apply cons cell
+	if ( val.isCons() )
+	{
+		std::optional<Stack> output = CompileCall( Stack(val), env );
+		if ( ! output )
+			return std::nullopt;
+
+		return CompileArgumentsList( st, env, Stack() . push ( Value::Instruction(AP) ) . load ( *output ) );
+	}
+
+	// built-ins compile their own arguments
+	std::string str = val.sym();
+	if ( tokens::isSymbol( str ) )
+		return CompileBuiltInCall ( str, st, env );
+
+	std::optional<Stack> output = CompileSymbol( str, st, env );
+	if ( !output )
+		return std::nullopt;
+
+	return CompileArgumentsList( st, env, Stack() . push ( Value::Instruction(AP) ) . load ( *output ) );
+}
+
+/****************************************************************************/
+
+// Arguments, individual tokens 
+std::optional<Stack> Compiler::CompileArguments ( const Stack & st, const EnvMap & env, const Stack & acc, bool append )
+{
+	if ( st.single() )
+	{
+		if ( append )
+			return acc . push ( st.top() );
+		
+		std::cerr << "Non-null ending list of arguments." << std::endl;
+		return std::nullopt;
+	}
+
+	if ( st.empty() )
+	{
+		if ( append )
+			return acc . push ( Value::Instruction ( NIL ) );
+		return acc;
+	}
+
+	if ( st . top(). isNull() )
+	{
+		std::cerr << "Unexpected EOF." << std::endl;
+		return std::nullopt;
+	}
+
+	std::optional<Stack> compiled = CompileToken( st, env );
+	if ( ! compiled )
+		return std::nullopt;
+
+	Stack nextAcc;
+	if ( append )
+		nextAcc = acc . push( Value::Instruction( CONS ) ) . load ( *compiled );
+	else
+		nextAcc = acc.load ( *compiled );
+
+	return CompileArguments ( st.pop(), env, nextAcc, append );
+}
+
+std::optional<Stack> Compiler::CompileArgumentsList ( const Stack & st, const EnvMap & env, const Stack & acc )
+{
+	return CompileArguments( st, env, acc, true );
+}
+
+std::optional<Stack> Compiler::CompileToken ( Stack st, const EnvMap & env )
+{
+	Value val = st.top();
+	st = st.pop();
 
 	// Number is loaded via LDC
 	if ( val.isNum() )
-		return { Stack() . push ( val ) . push( Value::Instruction( LDC ) ), st };
+		return CompileNumber( val );
 
-	// Cons cell which means sub-list or lambda 
+	// Cons cell is applicated
 	if ( val.isCons() )
-		return CompileCons( val, st, env, funcs );
+		return CompileCall ( Stack( val ), env );
 
 	// is Symbol
 	std::string str = val.sym();
 
 	// is built-in symbol
 	if ( tokens::isSymbol( str ) )
-		return CompileBuiltIn( str, st, env, funcs );
+		return CompileBuiltIn( str, st, env );
 
-	return CompileSymbol( str, st, env, funcs );
+	return CompileSymbol( str, st, env );
 }
 
 /****************************************************************************/
 
-Compiler::CompilePair Compiler::CompileCons ( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
+Stack Compiler::CompileNumber ( const Value & val )
 {
-	if ( val.car().isSym() && val.car().sym() == "lambda" )
-		return CompileLambdaApplicate( val, st, env, funcs );
-
-	return { CompileSource ( Stack( val ), env, funcs, Stack() ), st };
+	// Number is loaded via LDC
+	return Stack() . push ( val ) . push( Value::Instruction( LDC ) );
 }
 
-Compiler::CompilePair Compiler::CompileBuiltIn ( const std::string & val, const Stack & st, const EnvMap & env, const FunSet & funcs  )
+/****************************************************************************/
+
+// Simple translation with checks
+std::optional<Stack> Compiler::CompileBuiltIn ( const std::string & val, const Stack & st, const EnvMap & env )
 {
 	// simple translation
 	std::optional<Instruction> opt = tokens::translate( val );
 	if ( opt )
-		return { Stack() . push ( Value::Instruction( *opt ) ), st };
-
-	if ( val == "if" )
-		return CompileIf( st, env, funcs );
-
-	if ( val == "quote" )
-		return CompileQuote( st, env, funcs );
-
-	if ( val == "quasiquote" )
-		return CompileQuasiquote( st, env, funcs );
+		return Stack() . push ( Value::Instruction( *opt ) );
 
 	if ( val == "unquote" )
 	{
 		std::cerr << "Unquote not in quasiquote." << std::endl;
-		return {std::nullopt, st};
+		return std::nullopt;
 	}
 
 	if ( val == "defun" )
 	{
 		std::cerr << "Defun can be only used in a global scope." << std::endl;
-		return {std::nullopt, st};
+		return std::nullopt;
 	}
 
-	// shouldn't occur
+	// symbol not usable without 
 	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
-	return { std::nullopt, st };
+	return std::nullopt;
 }
 
-
-Compiler::CompilePair Compiler::CompileSymbol ( const std::string & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
+std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, const Stack & st, const EnvMap & env )
 {
-	if ( env.count( val ) )
+	// simple translation
+	std::optional<Instruction> opt = tokens::translate( val );
+	if ( opt )
 	{
-		Stack output = Stack() . push ( env.at(val) ) . push( Value::Instruction(LD) );
-		if ( funcs.count( val ) )
-		{
-			output = Stack() . push( Value::Instruction( AP ) ) . load ( output );
-			return CompileArgsSource( st, env, funcs, output );
-		}
-
-		return { output, st };
+		//TODO check correct number of arguments
+		Stack output = Stack() . push ( Value::Instruction( *opt ) );
+		if ( *opt == PRINT )
+			return CompileArgumentsList( st, env, output );
+		else
+			return CompileArguments( st, env, output );
 	}
- 
-	std::cerr << "Token '" << val << "' is not defined." << std::endl;
-	return { std::nullopt, st };
+
+	if ( val == "if" )
+		return CompileIf( st, env );
+
+	if ( val == "quote" )
+		return CompileQuote( st, env );
+
+	if ( val == "quasiquote" )
+		return CompileQuasiquote( st, env );
+
+	if ( val == "unquote" )
+	{
+		std::cerr << "Unquote not in quasiquote." << std::endl;
+		return std::nullopt;
+	}
+
+	if ( val == "defun" )
+	{
+		std::cerr << "Defun can be only used in a global scope." << std::endl;
+		return std::nullopt;
+	}
+
+	if ( val == "lambda" )
+		return CompileLambda ( st, env );
+
+	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
+	return std::nullopt;
 }
 
 /****************************************************************************/
 
-Compiler::CompilePair Compiler::CompileIf ( const Stack & st, const EnvMap & env, const FunSet & funcs )
+std::optional<Stack> Compiler::CompileSymbol ( const std::string & val, const Stack & st, const EnvMap & env )
 {
-	auto [opt1, st1] = CompileToken( st, env, funcs );
-	auto [opt2, st2] = CompileToken( st1, env, funcs );
-	auto [opt3, st3] = CompileToken( st2, env, funcs );
+	if ( env.count( val ) )
+	{
+		Stack output = Stack() . push ( env.at(val) ) . push( Value::Instruction(LD) );
+		return output;
+	}
+ 
+	std::cerr << "Token '" << val << "' is not defined." << std::endl;
+	return std::nullopt;
+}
+
+/****************************************************************************/
+
+std::optional<Stack> Compiler::CompileIf ( const Stack & st, const EnvMap & env )
+{
+	if ( st.empty() || st.pop().empty() || st.pop().pop().empty() )
+	{
+		std::cerr << "If has incorrect number of arguments." << std::endl;
+		return std::nullopt;
+	}
+
+	std::optional<Stack> opt1 = CompileToken( st, env );
+	std::optional<Stack> opt2 = CompileToken( st.pop(), env );
+	std::optional<Stack> opt3 = CompileToken( st.pop().pop(), env );
 
 	if ( ! ( opt1 && opt2 && opt3 ) )
-	{
-		std::cerr << "If expected three arguments, got " 
-		<< opt1.has_value() + opt2.has_value() + opt3.has_value()
-		<< "." << std::endl;
-
-		return { std::nullopt, st };
-	}
+		return std::nullopt;
 
 	Stack joinStack = Stack() . push ( Value::Instruction( JOIN ) );
 
@@ -288,38 +333,48 @@ Compiler::CompilePair Compiler::CompileIf ( const Stack & st, const EnvMap & env
 	Stack arg2 = joinStack . load ( *opt2 );
 	Stack arg3 = joinStack . load ( *opt3 );
 
-	Stack output = Stack()
+	return Stack()
 		. push ( arg3.data() )
 		. push ( arg2.data() )
 		. push( Value::Instruction( SEL ) )
 		. load ( arg1 );
-
-	return { output, st3 };
 }
 
-Compiler::CompilePair Compiler::CompileQuote ( const Stack & st, const EnvMap & env, const FunSet & funcs )
+std::optional<Stack> Compiler::CompileQuote ( const Stack & st, const EnvMap & env )
 {
 	if ( st.empty() )
 	{
 		std::cerr << "Quote used without arguments." << std::endl;
-		return { std::nullopt, st };
+		return std::nullopt;
 	}
 
-	return { Stack() . push( st.top() ) . push( Value::Instruction( LDC ) ), st.pop() };
+	if ( ! st.pop().empty() )
+	{
+		std::cerr << "Too many agruments in quote" << std::endl;
+		return std::nullopt;
+	}
+
+	return Stack() . push( st.top() ) . push( Value::Instruction( LDC ) );
 }
 
-Compiler::CompilePair Compiler::CompileQuasiquote ( const Stack & st, const EnvMap & env, const FunSet & funcs )
+std::optional<Stack> Compiler::CompileQuasiquote ( const Stack & st, const EnvMap & env )
 {
 	if ( st.empty() )
 	{
-		std::cerr << "Quote used without arguments." << std::endl;
-		return { std::nullopt, st };
+		std::cerr << "Quasiquote used without arguments." << std::endl;
+		return std::nullopt;
 	}
 
-	return { CompileQuasiquoteAssemble( st.top(), env, funcs ), st.pop() };
+	if ( ! st.pop().empty() )
+	{
+		std::cerr << "Too many agruments in quasiquote" << std::endl;
+		return std::nullopt;
+	}
+
+	return CompileQuasiquoteAssemble( st.top(), env );
 }
 
-std::optional<Stack> Compiler::CompileQuasiquoteAssemble( const Value & val, const EnvMap & env, const FunSet & funcs )
+std::optional<Stack> Compiler::CompileQuasiquoteAssemble( const Value & val, const EnvMap & env )
 {
 	if ( val.isNull() )
 		return Stack() . push ( Value::Instruction( NIL ) );
@@ -328,10 +383,17 @@ std::optional<Stack> Compiler::CompileQuasiquoteAssemble( const Value & val, con
 		return Stack() . push( val ) . push ( Value::Instruction( LDC ) );
 
 	if ( val.car().isSym() && val.car().sym() == "unquote" )
-		return CompileSource ( Stack( val.cdr() ), env, funcs, Stack() );
+	{
+		Value toUnquote = val.cdr().car();
+		
+		if ( toUnquote.isCons() )
+			return CompileCall( Stack( toUnquote ), env );
 
-	std::optional<Stack> car = CompileQuasiquoteAssemble( val.car(), env, funcs );
-	std::optional<Stack> cdr = CompileQuasiquoteAssemble( val.cdr(), env, funcs );
+		return CompileArguments ( Stack() . push(toUnquote), env, Stack() );
+	}
+
+	std::optional<Stack> car = CompileQuasiquoteAssemble( val.car(), env );
+	std::optional<Stack> cdr = CompileQuasiquoteAssemble( val.cdr(), env );
 
 	if ( ! ( car && cdr ) )
 		return std::nullopt;
@@ -341,23 +403,9 @@ std::optional<Stack> Compiler::CompileQuasiquoteAssemble( const Value & val, con
 
 /****************************************************************************/
 
-Compiler::CompilePair Compiler::CompileLambdaApplicate ( const Value & val, const Stack & st, const EnvMap & env, const FunSet & funcs )
+std::optional<Stack> Compiler::CompileLambda ( const Stack & st, const EnvMap & env )
 {
-	std::optional<Stack> opt = CompileLambda( val, env, funcs );
-
-	if ( ! opt )
-		return { std::nullopt, st };
-
-	Stack acc = Stack()
-	 		. push( Value::Instruction( AP ) )
-	 		. load ( *opt );
-
-	return CompileArgsSource( st, env, funcs, acc );
-}
-
-std::optional<Stack> Compiler::CompileLambda ( const Value & val, const EnvMap & env, const FunSet & funcs )
-{
-	std::optional<Stack> opt = CompileBody( val, env, funcs );
+	std::optional<Stack> opt = CompileBody( st, env );
 	if ( ! opt )
 		return std::nullopt;
 
@@ -367,48 +415,46 @@ std::optional<Stack> Compiler::CompileLambda ( const Value & val, const EnvMap &
 }
 
 // input (defun name (params) (body))
-std::tuple<Value, Compiler::EnvMap, Compiler::FunSet> Compiler::CompileDefun ( const Value & val, EnvMap env, FunSet funcs )
+std::tuple<Value, Compiler::EnvMap> Compiler::CompileDefun ( const Value & val, EnvMap env  )
 {
 	if ( ! ( val.cdr().isCons() && val.cdr().car().isSym() ))
 	{
 		std::cerr << "Wrong structure of defun." << std::endl;
-		return { Value::Null(), env, funcs };
+		return { Value::Null(), env };
 	}
 
 	std::string name = val.cdr().car().sym();
 
-	std::optional<Stack> body = CompileBody( val.cdr(), env, funcs );
+	std::optional<Stack> body = CompileBody( Stack( val.cdr().cdr() ), env );
 	if ( ! body )
-		return { Value::Null(), env, funcs };
+		return { Value::Null(), env };
 
 	// Add function to enviroment
 	int index = EnviromentNext( env );
 	env.insert( { name, Value::Cons( Value::Integer(0), Value::Integer( index ) ) } );
-	funcs.insert ( name );
 
-	return { Stack() . push( body -> data() ) . push( Value::Instruction( DEFUN ) ) . data(), env, funcs };
+	return { Stack() . push( body -> data() ) . push( Value::Instruction( DEFUN ) ) . data(), env };
 }
 
-// input (symbol (params) (body))
-std::optional<Stack> Compiler::CompileBody ( const Value & val, const EnvMap & env, const FunSet & funcs )
+// input stack = (params), (body)
+std::optional<Stack> Compiler::CompileBody ( const Stack & st, const EnvMap & env )
 {
 	// correct structure
-	if ( !(	val.cdr().isCons() // ( (params) . ( (body) . nil ) )
-		&& 	val.cdr().cdr().isCons() // (body . nil)
-		&& 	val.cdr().cdr().cdr().isNull() // nil
-	))
+	if ( st.empty()
+		||   st.pop().empty()
+		|| ! st.pop().pop().empty()
+	)
 	{
 		std::cerr << "Wrong structure of function body." << std::endl;
 		return std::nullopt;
 	}
 
-	Value params = val.cdr().car();
+	Value params = st.top();
 	EnvMap nextEnv = EnviromentAddValues( ShiftEnviroment( env ), params );
-	std::set<std::string> nextFuncs = FunctionsRemoveSymbols( funcs, params );
 
-	Value body = val.cdr().cdr().car();
+	Value body = st.pop().top();
 
-	std::optional<Stack> compiledBodyOpt = CompileSource ( Stack( body ), nextEnv, nextFuncs, Stack() );
+	std::optional<Stack> compiledBodyOpt = CompileArguments ( Stack( body ), nextEnv, Stack() );
 
 	if ( ! compiledBodyOpt )
 		return std::nullopt;

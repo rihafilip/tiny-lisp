@@ -98,10 +98,12 @@ void compile ( std::string str )
 void testCompiler()
 {
 	compile( "( + 1 2 )" );
-	compile ( "(car ( + 1 2 )) (cdr ( 2 3 ))" );
+	compile( "( + ( / 10 5) 2 )" );
+	compile ( "(car ( + 1 2 )) (cdr '( 2 3 ))" );
 	compile( "( if 0 ( + 1 2 ) ( - 2 3) )" );
+	compile( "( + 1 (if 0 1 2) )" );
 	compile( "( if ( if ( + 2 3 ) 1 0 ) ( consp 1 ) ( consp 0 ) )" );
-	compile ( " ( 1 . 2 ) ");
+	compile ( " ( consp 1 . 2 ) ");
 
 	std::cout << "FUNCS:" << std::endl<< std::endl;
 	
@@ -109,6 +111,7 @@ void testCompiler()
 	compile( "( (lambda (z) ((lambda (x y) (+ y z) ) 10 20 ) ) 5 )" );
 	compile( "(defun foo (x) (+ x 1))" );
 	compile( "(defun foo (x) (+ x 1)) (foo 0)" );
+
 	compile ( "(lambda (x) (x))" );
 	std::cout << "Expected error:" << std::endl;
 	compile("((+ lambda (x) (x) ) 10)");
@@ -119,6 +122,9 @@ void testCompiler()
 
 	compile( "`(1 (2 ,(- 4 1)))" );
 	compile( "`(1 . ,(+ 1 2 ))");
+	compile( "(defun foo (x) (x)) `(+ 3 ,foo 15) " );
+	compile( "(defun foo (x) (x)) `(+ 3 ,(foo 15)) " );
+	compile( "(print 'hello 'world)" );
 }
 
 void exec ( const std::string & str )
