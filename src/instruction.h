@@ -4,6 +4,7 @@
 
 namespace lisp::secd
 {
+	/// SECD machine instruction
 	enum Instruction
 	{
 		// load constants
@@ -47,6 +48,8 @@ namespace lisp::secd
 		READ
 	};
 
+	/// Transforms instruction to string
 	std::string toString ( Instruction ins );
+	/// Prints instruction to ostream
 	std::ostream & operator<< ( std::ostream & os, Instruction ins );
 }

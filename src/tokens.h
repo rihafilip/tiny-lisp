@@ -13,6 +13,7 @@ namespace lisp::tokens
     using namespace lisp;
     using namespace lisp::secd;
     
+    /// Set of correct, non-trivialy translatable tokens
     const std::set<std::string> TOKENS_SET = 
     {
         // syntax
@@ -36,6 +37,7 @@ namespace lisp::tokens
     	"lambda",
     };
 
+    /// Map of trivialy translatable tokens
     const std::map<std::string, Instruction> INSTRUCTIONS_MAP =
     {
         // artihmetics
@@ -63,6 +65,8 @@ namespace lisp::tokens
         { "read",     READ}
     };
 
+    /// Returns translation of trivialy-translatable tokens, empty otherwise
     std::optional<Instruction> translate ( const std::string & in );
+    /// Returns true if given string is translatable token, false otherwise
     bool isSymbol ( const std::string & in );
 }
