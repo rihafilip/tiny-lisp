@@ -17,7 +17,7 @@ namespace lisp
 
 	private:
 		Stack input;
-		std::map<std::string, std::string> syntaxSugar;
+		static const std::map<std::string, std::string> syntaxSugar;
 
 		Parser ( const Value & vinput );
 

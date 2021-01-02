@@ -2,6 +2,12 @@
 
 using namespace lisp;
 
+const std::map<std::string, std::string> Parser::syntaxSugar = 
+	{
+		{ "'", "quote" },
+		{ "`", "quasiquote" },
+		{ ",", "unquote" }
+	};
 /*
 INPUT	:= { ITEM }
 
@@ -22,14 +28,7 @@ Value Parser::Parse ( const Value & tokens )
 
 Parser::Parser( const Value & vinput  )
 : input( vinput )
-{
-	syntaxSugar = 
-	{
-		{ "'", "quote" },
-		{ "`", "quasiquote" },
-		{ ",", "unquote" }
-	};
-}
+{}
 
 std::optional<Value> Parser::Process ()
 {
@@ -63,7 +62,7 @@ std::optional<Value> Parser::Item ()
 
 		if ( syntaxSugar.count( str ) )
 		{
-			Value car = Value::Symbol( syntaxSugar[str] );
+			Value car = Value::Symbol( syntaxSugar.at(str) );
 			std::optional<Value> cdr = Item();
 
 			if ( cdr )
