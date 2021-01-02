@@ -186,9 +186,8 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return Registers( st, env, code, _d.pop() );
 		}
 
-		// TODO
 		case PRINT:
-			print (_s);
+			print ( Stack(_s.top()) );
 			return Registers( _s.pop(), _e, _c, _d );
 		case READ:
 			return Registers( _s . push( read() ), _e, _c, _d );
@@ -258,7 +257,8 @@ void Runtime::print ( const Stack & s )
 	if ( s.top().isNull()  )
 		return;
 
-	std::cout << s.top() << " ";		
+	std::cout << s.top() << " ";	
+	return print( s.pop() );
 }
 
 Value Runtime::read ()
