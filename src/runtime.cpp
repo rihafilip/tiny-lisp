@@ -8,7 +8,7 @@ Enviroment Runtime::executeCode ( const Stack & code, const Enviroment & env )
 	if ( code . empty() )
 		return env;
 
-	// new enviroment or, in cvase of corrupted code, previous enviroment
+	// new enviroment or, in case of corrupted code, previous enviroment
 	return executeCode( code.pop(), executeSource( Stack(), env, Stack( code.top() ), Stack() ) . value_or( env ) );
 }
 
@@ -45,14 +45,16 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 {
 	switch ( ins )
 	{
-		// load constants
+		// load constant from code
 		case LDC:
 			return Registers( _s.push ( _c.top() ), _e, _c.pop(), _d );
 
+		// push nil on stack
 		case NIL:
 			return Registers( _s.push( Value::Null() ), _e, _c, _d );
 
-		// number manipulation
+		// arithmetic and relation operators
+		// pops two numbers from stack and pushes result on stack
 		case ADD:
 		case SUB:
 		case MUL:
@@ -61,10 +63,11 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		case MORE:
 			return binaryOperator( ins, _s, _e, _c, _d );
 
+		// pops two values form stack and pushes 1 if they are equal, 0 otherwise
 		case EQ:
 			return equals ( _s, _e, _c, _d );
 
-		// list
+		// pops two values from stack and pushes cons cell made form them on stack
 		case CONS:
 		{
 			Value rhs = _s.top();
@@ -72,13 +75,16 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return Registers( _s.pop().pop().push( Value::Cons( rhs, lhs ) ) , _e, _c, _d );
 		}
 
+		// pop cons cell form stack, pushes car of that cell onto stack
 		case CAR:
 			return consAccess( CAR, _s, _e, _c, _d );
 
+		// pop cons cell form stack, pushes cdr of that cell onto stack
 		case CDR:
 			return consAccess( CDR, _s, _e, _c, _d );
 
-		// type identify
+		// pops element from stack
+		// on stack pushes 1 if it is cons cell, 0 otherwise
 		case CONSP:
 		{
 			Value out = Value::Null();
@@ -90,15 +96,21 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return Registers( _s.pop().push( out ), _e, _c, _d );
 		}
 
-		// if
-		// 0 means false, everything else means true
+		// pops element from stack
+		// and two elements from code ( true case and false case )
+		// if from stack is 1, true case is executed
+		// otherwise false case is executed
+		// pushes rest of code onto dump
 		case SEL:
 			return select( _s, _e, _c, _d );
 
+		// pops code from dump
 		case JOIN:
 			return Registers( _s, _e, Stack (_d . top() ), _d . pop() );
 
-		// aditional loading
+		// pops cons cell ( depth, index ) from code
+		// finds value in enviroment on given indexes
+		// pushes that value on stack
 		case LD:
 		{
 			std::optional<Value> out = _e.onIndex( _c.top() );
@@ -111,6 +123,8 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return Registers( _s.push( *out ), _e, _c.pop(), _d );
 		}
 
+		// takes enviroment and pops body from code
+		// pushes on stack closure = ( body . enviroment )
 		case LDF:
 		{
 			Value enviroment = _e.data();
@@ -119,6 +133,8 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return Registers( _s.push( Value::Closure( code, enviroment ) ), _e, _c.pop(), _d );
 		}
 
+		// takes enviroment and pops body from code
+		// adds closure into enviroment
 		case DEFUN:
 		{
 			Value enviroment = _e.data();
@@ -127,21 +143,23 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return Registers( _s, _e.add ( Value::Closure( code, enviroment ) ), _c.pop(), _d );
 		}
 
-		// Load closure and arguments from stack
-		// stack = empty
-		// enviroment = closure.cdr + args
-		// code = closure.car
-		// to dump is pushed ( stack enviroment . code )
+		// pops code and arguments from stack
+		// applies them
 		case AP:
 			return apply( _s, _e, _c, _d );
 
-		// Keeps value from stack
+		// pops return value from stack
+		// returns state of stack, enviroment and code from dump
+		// pushes return value onto stack
 		case RTN:
 			return returns( _s, _e, _c, _d);
 
+		// pops form stack list of arguments, prints them
 		case PRINT:
 			print ( Stack(_s.top()) );
 			return Registers( _s.pop(), _e, _c, _d );
+
+		// reads from cin number or string symbol
 		case READ:
 			return Registers( _s . push( read() ), _e, _c, _d );
 	}
