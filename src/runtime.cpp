@@ -250,13 +250,17 @@ std::optional<Runtime::Registers> Runtime::binaryOperator ( Instruction ins, con
 
 std::optional<Runtime::Registers> Runtime::equals ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
 {
-	//TODO
-	// Value rhs = _s.top();
-	// Value lhs = _s.pop().top();
+	Value rhs = _s.top();
+	Value lhs = _s.pop().top();
+	int output;
 
-	// if ( rhs == lhs )
-	// 
-	return std::nullopt;
+	if ( rhs.equals(lhs) )
+		output = 1;
+	else
+		output = 0;
+	
+	return Registers( _s.pop().pop().push( Value::Integer(output) ) , _e, _c, _d );
+
 }
 
 void Runtime::print ( const Stack & s )

@@ -164,6 +164,41 @@ Value Value::append ( const Value & first, const Value & last )
 
 /*********************************************************/
 
+bool Value::equals ( const Value & other ) const
+{
+	if ( this -> memory -> type != other . memory -> type )
+		return false;
+
+	switch ( this -> memory -> type )
+	{
+		case GC::MemoryType::UNDEF:
+			return true;
+
+		case GC::MemoryType::EMPTY:
+			return true;
+
+		case GC::MemoryType::NUM:
+			return this -> num() == other.num();
+
+		case GC::MemoryType::SYM:
+			return this -> sym() == other.sym();
+
+		case GC::MemoryType::INST:
+			return this -> ins() == other.ins();
+
+		case GC::MemoryType::CLOS:
+		case GC::MemoryType::CONS:
+			return this -> car().equals( other.car() )
+				&& this -> cdr().equals( other.cdr() );
+	}
+
+	// compilator satisfaction
+	return false;
+}
+
+
+/*********************************************************/
+
 namespace lisp
 {
 	std::ostream & operator<< (std::ostream & os, const Value & val )

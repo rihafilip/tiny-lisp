@@ -60,6 +60,9 @@ namespace lisp
 		/// Append val to this
 		Value append ( const Value & val ) const;
 
+		/// True if both values are equal, false otherwise
+		bool equals ( const Value & other ) const;
+
 		friend std::ostream & operator<< (std::ostream & os, const Value & val );
 
 	private:
