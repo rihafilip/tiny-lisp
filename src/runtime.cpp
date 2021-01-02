@@ -73,16 +73,10 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		}
 
 		case CAR:
-		{
-			Value lst = _s.top();
-			return Registers( _s.pop().push( lst.car() ), _e, _c, _d );
-		}
+			return consAccess( CAR, _s, _e, _c, _d );
 
 		case CDR:
-		{
-			Value lst = _s.top();
-			return Registers( _s.pop().push( lst.cdr() ), _e, _c, _d );
-		}
+			return consAccess( CDR, _s, _e, _c, _d );
 
 		// type identify
 		case CONSP:
@@ -99,33 +93,7 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		// if
 		// 0 means false, everything else means true
 		case SEL:
-		{	
-			if ( _c.empty() )
-			{
-				std::cerr << "If is missing true statement" << std::endl;				
-				return std::nullopt;
-			}
-
-			if ( _c.pop().empty() )
-			{
-				std::cerr << "If is missing else statement" << std::endl;				
-				return std::nullopt;
-			}
-
-			Value condition = _s . top();
-			Value truecase = _c.top();
-			Value falsecase = _c.pop().top();
-			Value out = Value::Null();
-
-			if ( ! condition.isNum() || ( condition.num() == 0 ) )
-				out = falsecase;
-			else
-				out = truecase;
-
-			Stack outStack = Stack(out);
-
-			return Registers( _s.pop(), _e, outStack , _d.push( _c.pop().pop().data() ) );
-		}
+			return select( _s, _e, _c, _d );
 
 		case JOIN:
 			return Registers( _s, _e, Stack (_d . top() ), _d . pop() );
@@ -165,33 +133,11 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		// code = closure.car
 		// to dump is pushed ( stack enviroment . code )
 		case AP:
-		{
-			Value clos = _s.top();
-			Value args = _s.pop().top();
-
-			return Registers (
-				Stack(),
-				Enviroment( clos . cdr() ) . shifted() . setZeroDepth ( args ) ,
-				Stack( clos.car() ),
-				_d.push(
-					Value::Cons( _s.pop().pop().data(),
-						Value::Cons( _e.data(),
-							_c.data() ) ) )
-			);
-		}
+			return apply( _s, _e, _c, _d );
 
 		// Keeps value from stack
 		case RTN:
-		{
-			Value retVal = _s.top();
-			// ( stack enviroment . code )
-			Value prev = _d.top();
-
-			Stack st = Stack ( prev.car() ) . push( retVal );
-			Enviroment env = Enviroment ( prev.cdr().car() );
-			Stack code = Stack ( prev.cdr().cdr() );
-			return Registers( st, env, code, _d.pop() );
-		}
+			return returns( _s, _e, _c, _d);
 
 		case PRINT:
 			print ( Stack(_s.top()) );
@@ -260,7 +206,80 @@ std::optional<Runtime::Registers> Runtime::equals ( const Stack & _s, const Envi
 		output = 0;
 	
 	return Registers( _s.pop().pop().push( Value::Integer(output) ) , _e, _c, _d );
+}
 
+std::optional<Runtime::Registers> Runtime::consAccess ( Instruction ins, const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+{
+	Value lst = _s.top();
+	if ( ! lst.isCons()  )
+	{
+		std::cerr << "Cons access in non-cons element." << std::endl;
+		return std::nullopt;		
+	}
+
+	Value out = Value::Null();
+
+	if ( ins == CAR )
+		out = lst.car();
+	else /*( ins == CDR )*/
+		out = lst.cdr();
+	
+	return Registers( _s.pop().push( out ), _e, _c, _d );
+}
+
+// if
+// 0 means false, everything else means true
+std::optional<Runtime::Registers> Runtime::select ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+{
+	Value condition = _s . top();
+	Value truecase = _c.top();
+	Value falsecase = _c.pop().top();
+	Value out = Value::Null();
+
+	if ( ! condition.isNum() || ( condition.num() == 0 ) )
+		out = falsecase;
+	else
+		out = truecase;
+
+	Stack outStack = Stack(out);
+
+	return Registers( _s.pop(), _e, outStack , _d.push( _c.pop().pop().data() ) );
+}
+
+// stack = empty
+// enviroment = closure.cdr + args
+// code = closure.car
+// to dump is pushed ( stack enviroment . code )
+std::optional<Runtime::Registers> Runtime::apply ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+{
+	Value clos = _s.top();
+	if ( ! clos.isClos()  )
+	{
+		std::cerr << "Apply on non-closure." << std::endl;
+		return std::nullopt;
+	}
+
+	Value args = _s.pop().top();
+	Value toDump = Value::Cons( _s.pop().pop().data(),
+		Value::Cons( _e.data(), _c.data() ) );
+
+	return Registers (
+		Stack(),
+		Enviroment( clos . cdr() ) . shifted() . setZeroDepth ( args ) ,
+		Stack( clos.car() ),
+		_d.push( toDump )
+	);
+}
+std::optional<Runtime::Registers> Runtime::returns ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+{
+	Value retVal = _s.top();
+	// ( stack enviroment . code )
+	Value prev = _d.top();
+
+	Stack st = Stack ( prev.car() ) . push( retVal );
+	Enviroment env = Enviroment ( prev.cdr().car() );
+	Stack code = Stack ( prev.cdr().cdr() );
+	return Registers( st, env, code, _d.pop() );
 }
 
 void Runtime::print ( const Stack & s )
