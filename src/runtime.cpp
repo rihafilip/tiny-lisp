@@ -14,13 +14,6 @@ Enviroment Runtime::executeCode ( const Stack & code, const Enviroment & env )
 
 std::optional<Enviroment> Runtime::executeSource ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
 {
-#ifdef DBG
-	std::cout << "S: " << _s;
-	std::cout << "Enviroment: " << std::endl << _e;
-	std::cout << "Code: " << _c;
-	std::cout << "Dump: " << _d << std::endl;
-#endif
-	
 	if ( _c . empty () )
 	{
 		print ( _s );

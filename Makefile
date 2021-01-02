@@ -7,7 +7,7 @@ LD=g++
 LDFLAGS=
 
 CXX=g++
-CXXDBGFLAGS= -g -D 'DBG'
+CXXDBGFLAGS= -g -D 'DBG' -D 'TEST'
 CXXFLAGS=-std=c++17 -Wall -pedantic -Wno-long-long -c $(CXXDBGFLAGS)
 
 all: $(OBJ)
