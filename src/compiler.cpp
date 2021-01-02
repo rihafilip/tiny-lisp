@@ -2,13 +2,10 @@
 #include "instruction.h"
 #include "tokens.h"
 
+#include <functional>
+
 using namespace lisp;
 using namespace lisp::secd;
-
-/*
-TODO
-LET
- */
 
 // enviroment and functions helpers
 namespace
@@ -61,7 +58,7 @@ namespace
 					{ return a.second.car().num() < b.second.car().num(); }
 			) -> second.cdr().num();
 
-			max++;
+			++max;
 		}
 		return max;
 	}
@@ -173,7 +170,7 @@ std::optional<Stack> Compiler::CompileArguments ( const Stack & st, const EnvMap
 
 	if ( st . top(). isNull() )
 	{
-		std::cerr << "Unexpected EOF." << std::endl;
+		std::cerr << "Unexpected nil." << std::endl;
 		return std::nullopt;
 	}
 
@@ -257,40 +254,23 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 {
 	// simple translation
 	std::optional<Instruction> opt = tokens::translate( val );
+
+	static const std::set<Instruction> zeroArg = { NIL, READ };
+	static const std::set<Instruction> oneArg = { CONS, CAR, CDR, CONSP };
+	static const std::set<Instruction> twoArg = { ADD, SUB, MUL, DIV, EQ, LESS, MORE };
+
 	if ( opt )
 	{
 		bool correct;
-		switch( *opt )
+		if ( *opt == PRINT )
+			correct = true;
+		else if ( zeroArg.count ( *opt ) ) 	correct = AssertArgsCount( 0, st );
+		else if ( oneArg.count ( *opt ) ) 	correct = AssertArgsCount( 1, st );
+		else if ( twoArg.count ( *opt ) ) 	correct = AssertArgsCount( 2, st );
+		else
 		{
-			case ADD:
-			case SUB:
-			case MUL:
-			case DIV:
-			case EQ:
-			case LESS:
-			case MORE:
-				correct = AssertArgsCount( 2, st );
-				break;
-
-			case CONS:
-			case CAR:
-			case CDR:
-			case CONSP:
-				correct = AssertArgsCount( 1, st );
-				break;
-
-			case NIL:
-			case READ:
-				correct = AssertArgsCount( 0, st );
-				break;
-
-			case PRINT: // print can have any n8mber of arguments
-				correct = true;
-				break;
-
-			default:
-				std::cerr << "Unhandeled simple translate args count." << std::endl;
-				return std::nullopt;
+			std::cerr << "Unhandeled simple translate args count." << std::endl;
+			return std::nullopt;
 		}
 
 		if ( ! correct )
@@ -306,32 +286,32 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 			return CompileArguments( st, env, output );
 	}
 
-	if ( val == "if" )
-		return CompileIf( st, env );
-
-	if ( val == "quote" )
-		return CompileQuote( st, env );
-
-	if ( val == "quasiquote" )
-		return CompileQuasiquote( st, env );
-
-	if ( val == "unquote" )
+	static const std::map<std::string, std::function< std::optional<Stack>( const Stack&, const Compiler::EnvMap& ) >> 
+	builtInMap =
 	{
-		std::cerr << "Unquote not in quasiquote." << std::endl;
-		return std::nullopt;
-	}
+		{ "if", CompileIf },
+		{ "quote", CompileQuote },
+		{ "quasiquote", CompileQuasiquote },
+		{ "lambda", CompileLambda  },
+		{ "let", CompileLet },
+		{ "unquote",
+			[] ( const Stack & st, const EnvMap & env )
+			{
+				std::cerr << "Unquote not in quasiquote." << std::endl;
+				return std::nullopt;
+			}
+		},
+		{ "defun",
+			[] ( const Stack & st, const EnvMap & env )
+			{
+				std::cerr << "Defun can be only used in a global scope." << std::endl;
+				return std::nullopt;
+			}
+		},
+	};
 
-	if ( val == "defun" )
-	{
-		std::cerr << "Defun can be only used in a global scope." << std::endl;
-		return std::nullopt;
-	}
-
-	if ( val == "lambda" )
-		return CompileLambda ( st, env );
-
-	if ( val == "let" )
-		return CompileLet( st, env );
+	if ( builtInMap.count(val) )
+		return builtInMap . at(val) ( st, env );
 
 	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
 	return std::nullopt;
@@ -365,7 +345,7 @@ std::optional<Stack> Compiler::CompileSymbol ( const std::string & val, const St
 
 std::optional<Stack> Compiler::CompileIf ( const Stack & st, const EnvMap & env )
 {
-	if ( st.empty() || st.pop().empty() || st.pop().pop().empty() || ! st.pop().pop().pop().empty() )
+	if ( ! AssertArgsCount( 3, st ) )
 	{
 		std::cerr << "If has incorrect number of arguments." << std::endl;
 		return std::nullopt;
@@ -393,7 +373,7 @@ std::optional<Stack> Compiler::CompileIf ( const Stack & st, const EnvMap & env 
 
 std::optional<Stack> Compiler::CompileLet ( const Stack & st, const EnvMap & env )
 {
-	if ( st.empty() || st.pop().empty() || ! st.pop().pop().empty() )
+	if ( ! AssertArgsCount( 2, st ) )
 	{
 		std::cerr << "Let has incorrect number of arguments." << std::endl;
 		return std::nullopt;
@@ -406,9 +386,6 @@ std::optional<Stack> Compiler::CompileLet ( const Stack & st, const EnvMap & env
 
 	if ( ! optArgsBodies )
 		return std::nullopt;
-
-	std::cout << "args names: "  << argsNames<< std::endl;
-	std::cout << "args bodies: " << *optArgsBodies << std::endl;
 
 	EnvMap nextEnv = EnviromentAddValues( ShiftEnviroment( env ), argsNames );
 
@@ -555,10 +532,7 @@ std::tuple<Value, Compiler::EnvMap> Compiler::CompileDefun ( const Value & val, 
 std::optional<Stack> Compiler::CompileBody ( const Stack & st, const EnvMap & env )
 {
 	// correct structure
-	if ( st.empty()
-		||   st.pop().empty()
-		|| ! st.pop().pop().empty()
-	)
+	if ( ! AssertArgsCount( 2, st ) )
 	{
 		std::cerr << "Wrong structure of function body." << std::endl;
 		return std::nullopt;
