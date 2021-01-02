@@ -304,6 +304,7 @@ void Runtime::print ( const Stack & s )
 
 Value Runtime::read ()
 {
+	std::cout << "> ";
 	std::string input;
 	std::cin >> input;
 
