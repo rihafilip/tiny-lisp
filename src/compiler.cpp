@@ -362,7 +362,7 @@ std::optional<Stack> Compiler::CompileSymbol ( const std::string & val, const St
 
 std::optional<Stack> Compiler::CompileIf ( const Stack & st, const EnvMap & env )
 {
-	if ( st.empty() || st.pop().empty() || st.pop().pop().empty() )
+	if ( st.empty() || st.pop().empty() || st.pop().pop().empty() || ! st.pop().pop().pop().empty() )
 	{
 		std::cerr << "If has incorrect number of arguments." << std::endl;
 		return std::nullopt;
