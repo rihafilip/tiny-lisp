@@ -511,7 +511,7 @@ std::optional<Stack> Compiler::CompileLambda ( const Stack & st, const EnvMap & 
 }
 
 // input (defun name (params) (body))
-std::tuple<Value, Compiler::EnvMap> Compiler::CompileDefun ( const Value & val, EnvMap env  )
+std::tuple<Value, Compiler::EnvMap> Compiler::CompileDefun ( const Value & val, const EnvMap & env  )
 {
 	if ( ! ( val.cdr().isCons() && val.cdr().car().isSym() ))
 	{
@@ -521,15 +521,17 @@ std::tuple<Value, Compiler::EnvMap> Compiler::CompileDefun ( const Value & val, 
 
 	std::string name = val.cdr().car().sym();
 
-	std::optional<Stack> body = CompileBody( Stack( val.cdr().cdr() ), env );
-	if ( ! body )
-		return { Value::Null(), env };
-
 	// Add function to enviroment
-	int index = EnviromentNext( env );
-	env.insert( { name, Value::Cons( Value::Integer(0), Value::Integer( index ) ) } );
+	EnvMap nextEnv = env;
 
-	return { Stack() . push( body -> data() ) . push( Value::Instruction( DEFUN ) ) . data(), env };
+	int index = EnviromentNext( nextEnv );
+	nextEnv.insert( { name, Value::Cons( Value::Integer(0), Value::Integer( index ) ) } );
+
+	std::optional<Stack> body = CompileBody( Stack( val.cdr().cdr() ), nextEnv );
+	if ( ! body )
+		return { Value::Null(), env }; // return unchanged enviroment map
+
+	return { Stack() . push( body -> data() ) . push( Value::Instruction( DEFUN ) ) . data(), nextEnv };
 }
 
 // input stack = (params), (body)

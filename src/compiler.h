@@ -52,7 +52,7 @@ namespace lisp
 		static std::optional<Stack> CompileQuasiquoteAssemble( const Value & val, const EnvMap & env );
 
 		static std::optional<Stack> CompileLambda ( const Stack & st, const EnvMap & env );
-		static std::tuple<Value, EnvMap> CompileDefun ( const Value & val, EnvMap env  );
+		static std::tuple<Value, EnvMap> CompileDefun ( const Value & val, const EnvMap & env  );
 		/// Compiles body of lambda or function
 		static std::optional<Stack> CompileBody ( const Stack & st, const EnvMap & env );
 		/// @}

@@ -129,12 +129,7 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		// takes enviroment and pops body from code
 		// adds closure into enviroment
 		case DEFUN:
-		{
-			Value enviroment = _e.data();
-			Value code = _c.top();
-
-			return Registers( _s, _e.add ( Value::Closure( code, enviroment ) ), _c.pop(), _d );
-		}
+			return defun( _s, _e, _c, _d );
 
 		// pops code and arguments from stack
 		// applies them
@@ -236,6 +231,23 @@ std::optional<Runtime::Registers> Runtime::consAccess ( Instruction ins, const S
 		out = lst.cdr();
 	
 	return Registers( _s.pop().push( out ), _e, _c, _d );
+}
+
+std::optional<Runtime::Registers> Runtime::defun ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+{
+	Value dummyClos = Value::Dummy();
+	Value envCar = _e.data().car();
+	Value envCdr = _e.data().cdr();
+
+	Value enviroment = Value::Cons(
+		envCar . append( Value::Cons( dummyClos, Value::Null() ) ),
+		envCdr
+	);
+
+	Value clos = Value::Closure( _c .top(), enviroment );
+	dummyClos . swapDummy( clos );
+
+	return Registers( _s, _e.add ( clos ), _c.pop(), _d );
 }
 
 // if
