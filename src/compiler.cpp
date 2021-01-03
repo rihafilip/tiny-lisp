@@ -260,8 +260,8 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 	std::optional<Instruction> opt = tokens::translate( val );
 
 	static const std::set<Instruction> zeroArg = { NIL, READ };
-	static const std::set<Instruction> oneArg = { CONS, CAR, CDR, CONSP };
-	static const std::set<Instruction> twoArg = { ADD, SUB, MUL, DIV, EQ, LESS, MORE };
+	static const std::set<Instruction> oneArg = { CAR, CDR, CONSP };
+	static const std::set<Instruction> twoArg = { CONS, ADD, SUB, MUL, DIV, EQ, LESS, MORE };
 
 	if ( opt )
 	{
