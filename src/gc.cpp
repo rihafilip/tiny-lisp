@@ -154,11 +154,13 @@ void GC::Sweep ( List * lst )
 		if ( lst -> memory -> type == SYM )
 		{
 			delete[] lst -> memory -> name;
-			lst -> memory -> type = UNDEF;
 		}
+		lst -> memory -> type = UNDEF;
 		// prepend to m_Available;
 		m_Available = new List ( lst -> memory, m_Available );
 	}
+
+	lst -> memory -> marked = false;
 
 	Sweep ( lst -> next );
 }
@@ -206,7 +208,7 @@ void GC::Memory::Mark ()
 {
 	marked = true;
 	// Recursively mark cons cells
-	if ( type == MemoryType::CONS )
+	if ( type == MemoryType::CONS || type == MemoryType::CLOS )
 	{
 		this -> cons . first -> Mark();
 		this -> cons . second -> Mark();
