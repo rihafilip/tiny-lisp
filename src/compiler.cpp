@@ -62,14 +62,24 @@ namespace
 		}
 		return max;
 	}
+
+	Value ConsAppend ( const Value & ls1, const Value & ls2, bool flag = true )
+	{
+		if ( ls1.isNull() )
+		{
+			return Value::Cons( ls2, Value::Null() );
+		}
+
+		return Value::Cons( ls1.car(), ConsAppend( ls1.cdr(), ls2, false) );
+	}
 } // anonymous namespace
 
 /****************************************************************************/
 
-Value Compiler::CompileCode ( const Value & lst, const EnvMap & env )
+std::pair<Value, Compiler::EnvMap> Compiler::CompileCode ( const Value & lst, const EnvMap & env, const Value & acc )
 {
 	if ( lst.isNull() )
-		return Value::Null();
+		return { acc, env };
 
 	Value next = lst.car();
 
@@ -79,7 +89,7 @@ Value Compiler::CompileCode ( const Value & lst, const EnvMap & env )
 		if ( next.car().isSym() && next.car().sym() == "defun" )
 		{
 			auto [out, outEnv] = CompileDefun( next, env );
-			return Value::Cons( out, CompileCode( lst.cdr(), outEnv ) );
+			return CompileCode( lst.cdr(), outEnv, ConsAppend(acc, out) );
 		}
 
 		// cons -> Applicate
@@ -87,8 +97,8 @@ Value Compiler::CompileCode ( const Value & lst, const EnvMap & env )
 
 		// failed to compile, ignore
 		if ( ! compiled )
-			return CompileCode( lst.cdr(), env );
-		return Value::Cons( compiled -> data(), CompileCode( lst.cdr(), env ) );
+			return CompileCode( lst.cdr(), env, acc );
+		return CompileCode( lst.cdr(), env, ConsAppend(acc, compiled -> data()) );
 	}
 
 	// simple compile
@@ -96,8 +106,8 @@ Value Compiler::CompileCode ( const Value & lst, const EnvMap & env )
 
 	// failed to compile, ignore
 	if ( ! compiled )
-		return CompileCode( lst.cdr(), env );
-	return Value::Cons( compiled -> data(), CompileCode( lst.cdr(), env ) );
+		return CompileCode( lst.cdr(), env, acc );
+	return CompileCode( lst.cdr(), env, ConsAppend(acc, compiled -> data()) );
 }
 
 /****************************************************************************/

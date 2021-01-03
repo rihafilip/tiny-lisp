@@ -15,7 +15,7 @@ namespace lisp
 		typedef std::map<std::string, Value> EnvMap;
 		
 		/// Compiles given code with given enviroment map
-		static Value CompileCode ( const Value & lst, const EnvMap & env = EnvMap() );
+		static std::pair<Value, Compiler::EnvMap> CompileCode ( const Value & lst, const EnvMap & env = EnvMap(), const Value & acc = Value::Null() );
 
 	private:
 		/**

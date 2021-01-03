@@ -93,7 +93,7 @@ void testParser()
 void compile ( std::string str )
 {
 	std::cout << "input " << str << std::endl;
-	std::cout << Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl << std::endl;	
+	std::cout << Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ).first << std::endl << std::endl;	
 }
 
 void testCompiler()
@@ -124,6 +124,7 @@ void testCompiler()
 	compile("((+ lambda (x) ) 10)");
 
 	compile( "(defun foo (x) (+ x 1)) (defun bar (y) (foo y))" );
+	compile( "(defun foo (x) (+ x 1)) (defun bar (y) (foo y)) (car '(10 20))"  );
 
 	std::cout << "QUOTES:" << std::endl<< std::endl;
 
@@ -144,8 +145,8 @@ void testCompiler()
 void exec ( const std::string & str )
 {
 	std::cout << "input " << str << std::endl;
-	std::cout << "compiled " << Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ) << std::endl;
-	lisp::secd::Runtime::executeCode( Stack ( Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ) ) );
+	std::cout << "compiled " << Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ).first << std::endl;
+	lisp::secd::Runtime::executeCode( Stack ( Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ) ).first ) );
 
 	std::cout << std::endl << std::endl;
 }
