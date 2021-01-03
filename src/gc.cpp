@@ -213,6 +213,9 @@ GC::Memory::~Memory()
 
 void GC::Memory::Mark ()
 {
+	if ( marked )
+		return;
+	
 	marked = true;
 	// Recursively mark cons cells
 	if ( type == MemoryType::CONS || type == MemoryType::CLOS )
