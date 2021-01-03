@@ -263,7 +263,7 @@ void Value::print ( std::ostream & os, bool list ) const
 			break;
 
 		case GC::MemoryType::SYM:
-			os << '\'' << sym() << '\'';
+			os << sym() ;
 			break;
 
 		case GC::MemoryType::INST:
@@ -275,8 +275,6 @@ void Value::print ( std::ostream & os, bool list ) const
 		#ifdef DBG
 			os << ": ";
 			car().print(os);
-			os << ", env: ";
-			cdr().print(os);
 			os << " ";
 		#endif
 			os << ">";
