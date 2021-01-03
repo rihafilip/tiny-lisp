@@ -16,10 +16,13 @@ namespace lisp
 		 * \defgroup Val_ass Value assignement operators
 		 * @{
 		 */		
-		Value (const Value & src); 
-		Value & operator= (const Value & src); 
+		Value (const Value & src);
+		Value & operator= (const Value & src);
 		/// @}
 		
+		Value (Value && src) noexcept;
+		Value & operator= (Value && src) noexcept;
+
 		/**
 		 * \defgroup Val_cons Value constructors
 		 * @{

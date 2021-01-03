@@ -52,11 +52,33 @@ Value::Value ( const Value & src )
 
 Value & Value::operator= ( const Value & src )
 {
+	if ( this == &src )
+		return *this;
+
 	GC::RemoveRoot ( this -> memory );
 	this -> memory = src.memory;
 	GC::AddRoot( this -> memory );
 	return *this;
 }
+
+
+Value::Value ( Value && src ) noexcept
+{
+	this -> memory = src.memory;
+	src.memory = GC::GetNull();
+}
+
+Value & Value::operator= ( Value && src ) noexcept
+{
+	if ( this == &src )
+		return *this;
+
+	GC::RemoveRoot ( this -> memory );
+	this -> memory = src.memory;
+	src.memory = GC::GetNull();
+	return *this;
+}
+
 
 /*********************************************************/
 void Value::error ( GC::MemoryType expected ) const
