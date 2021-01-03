@@ -26,6 +26,12 @@ Value Value::Instruction ( secd::Instruction instruct )
 	return Value ( GC::GetMemory( instruct ) );
 }
 
+Value Value::Dummy ()
+{
+	return Value ( GC::GetDummy() );
+}
+
+
 Value Value::Null ()
 {
 	return Value ( GC::GetNull() );
@@ -186,6 +192,13 @@ Value Value::append ( const Value & first, const Value & last )
 
 /*********************************************************/
 
+void Value::swapDummy ( const Value & other )
+{
+	this -> memory -> fillDummy ( other . memory );
+}
+
+/*********************************************************/
+
 bool Value::equals ( const Value & other ) const
 {
 	if ( this -> memory -> type != other . memory -> type )
@@ -194,9 +207,8 @@ bool Value::equals ( const Value & other ) const
 	switch ( this -> memory -> type )
 	{
 		case GC::MemoryType::UNDEF:
-			return true;
-
 		case GC::MemoryType::EMPTY:
+		case GC::MemoryType::DUM:
 			return true;
 
 		case GC::MemoryType::NUM:
@@ -236,6 +248,10 @@ void Value::print ( std::ostream & os, bool list ) const
 	{
 		case GC::MemoryType::UNDEF:
 			os << "undef";
+			break;
+
+		case GC::MemoryType::DUM:
+			os << "dummy";
 			break;
 
 		case GC::MemoryType::EMPTY:

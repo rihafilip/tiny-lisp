@@ -128,6 +128,13 @@ GC::Memory * GC::GetMemory ( secd::Instruction instruct )
 	return mem;	
 }
 
+GC::Memory * GC::GetDummy ()
+{
+	Memory * mem = GetNextEmptyMemory();
+	mem -> type = DUM;
+	return mem;
+}
+
 GC::Memory * GC::GetNull ()
 {
 	return m_Null;
@@ -229,11 +236,41 @@ bool GC::Memory::operator== ( const Memory & other )
 			return this -> name == other . name;
 
 		case CONS:
+		case CLOS:
 			return ( this -> cons . first == other . cons . first )
 				&& ( this -> cons . second == other . cons . second );
 		// UNDEF, NULL
 		default:
 			return true;
+	}
+}
+
+void GC::Memory::fillDummy ( Memory * other )
+{
+	if ( this -> type != DUM )
+		return;
+
+	this -> type = other -> type;
+
+	switch ( this -> type )
+	{
+		case NUM:
+			this -> number = other -> number;
+			break;
+
+		case SYM:
+			this -> name = std::strcpy( new char[ std::strlen( other -> name ) + 1 ], other->name );
+			break;
+
+		case CONS:
+		case CLOS:
+			this -> cons . first = other -> cons . first;
+			this -> cons . second = other -> cons . second;
+			break;
+
+		// UNDEF, NULL
+		default:
+			break;
 	}
 }
 
@@ -247,6 +284,8 @@ std::string lisp::toString ( GC::MemoryType type )
 			return "undefined";
 		case GC::MemoryType::EMPTY:
 			return "null";
+		case GC::MemoryType::DUM:
+			return "dummy";
 		case GC::MemoryType::NUM:
 			return "number";
 		case GC::MemoryType::SYM:

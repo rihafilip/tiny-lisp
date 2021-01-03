@@ -27,7 +27,8 @@ namespace lisp
 			SYM, /// symbol
 			CONS, /// cons cell
 			CLOS, /// closure cons cell
-			INST /// SECD instruction
+			INST, /// SECD instruction
+			DUM /// dummy memory blok, its data is to be filled with
 		};
 
 		/**
@@ -49,6 +50,9 @@ namespace lisp
 			~Memory();
 			/// equality comparator
 			bool operator== ( const Memory & other );
+
+			/// repolaces this memory data with input memroy data
+			void fillDummy ( Memory * other );
 
 			/// Type of memory cell this is
 			MemoryType type;
@@ -82,6 +86,7 @@ namespace lisp
 		static Memory * GetMemory( const std::string & str );
 		static Memory * GetMemory( Memory * car, Memory * cdr, bool isClos );
 		static Memory * GetMemory ( secd::Instruction instruct);
+		static Memory * GetDummy ();
 		static Memory * GetNull ();
 		/// @}
 

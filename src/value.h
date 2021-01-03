@@ -32,6 +32,7 @@ namespace lisp
 		static Value Cons ( const Value & car, const Value & cdr );
 		static Value Closure( const Value & function, const Value & enviroment );
 		static Value Instruction ( secd::Instruction instruct );
+		static Value Dummy ();
 		static Value Null ();
 		///@}
 		/// Removes itself from roots in GC
@@ -62,6 +63,9 @@ namespace lisp
 
 		/// Append val to this
 		Value append ( const Value & val ) const;
+
+		/// Replaces dummy memory with data in input
+		void swapDummy ( const Value & other );
 
 		/// True if both values are equal, false otherwise
 		bool equals ( const Value & other ) const;
