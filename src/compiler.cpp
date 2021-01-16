@@ -259,36 +259,8 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 	// simple translation
 	std::optional<Instruction> opt = tokens::translate( val );
 
-	static const std::set<Instruction> zeroArg = { NIL, READ };
-	static const std::set<Instruction> oneArg = { CAR, CDR, CONSP };
-	static const std::set<Instruction> twoArg = { CONS, ADD, SUB, MUL, DIV, EQ, LESS, MORE };
-
 	if ( opt )
-	{
-		bool correct;
-		if ( *opt == PRINT )
-			correct = true;
-		else if ( zeroArg.count ( *opt ) ) 	correct = AssertArgsCount( 0, st );
-		else if ( oneArg.count ( *opt ) ) 	correct = AssertArgsCount( 1, st );
-		else if ( twoArg.count ( *opt ) ) 	correct = AssertArgsCount( 2, st );
-		else
-		{
-			std::cerr << "Unhandeled simple translate args count." << std::endl;
-			return std::nullopt;
-		}
-
-		if ( ! correct )
-		{
-			std::cerr << *opt << " has incorrect number of arguments." << std::endl;
-			return std::nullopt;	
-		}
-
-		Stack output = Stack() . push ( Value::Instruction( *opt ) );
-		if ( *opt == PRINT )
-			return CompileArgumentsList( st, env, output );
-		else
-			return CompileArguments( st, env, output );
-	}
+		return CompileBuiltInCallSimple( *opt, st, env );
 
 	static const std::map<std::string, std::function< std::optional<Stack>( const Stack&, const Compiler::EnvMap& ) >> 
 	builtInMap =
@@ -319,6 +291,36 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 
 	std::cerr << "Incorrect usage of symbol '" << val << "'." << std::endl;
 	return std::nullopt;
+}
+
+std::optional<Stack> Compiler::CompileBuiltInCallSimple ( Instruction val, const Stack & st, const EnvMap & env )
+{
+	static const std::set<Instruction> zeroArg = { NIL, READ };
+	static const std::set<Instruction> oneArg = { CAR, CDR, CONSP };
+	static const std::set<Instruction> twoArg = { CONS, ADD, SUB, MUL, DIV, EQ, LESS, MORE };
+
+	bool correct;
+	if ( val == PRINT ) 				correct = true;
+	else if ( zeroArg.count ( val ) ) 	correct = AssertArgsCount( 0, st );
+	else if ( oneArg.count ( val ) ) 	correct = AssertArgsCount( 1, st );
+	else if ( twoArg.count ( val ) ) 	correct = AssertArgsCount( 2, st );
+	else
+	{
+		std::cerr << "Unhandeled simple translate args count." << std::endl;
+		return std::nullopt;
+	}
+
+	if ( ! correct )
+	{
+		std::cerr << val << " has incorrect number of arguments." << std::endl;
+		return std::nullopt;	
+	}
+
+	Stack output = Stack() . push ( Value::Instruction( val ) );
+	if ( val == PRINT )
+		return CompileArgumentsList( st, env, output );
+	else
+		return CompileArguments( st, env, output );
 }
 
 bool Compiler::AssertArgsCount( int num, const Stack & val )
