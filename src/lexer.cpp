@@ -9,15 +9,8 @@ Value Lexer::Scan( const std::string & str )
 {
 	// Vector is used as a stack, so string is loaded to it back to front
 	vStack stringVector ( str.rbegin(), str.rend() );
-
-	Lexer l;
-	return l . begin ( stringVector );
+	return begin ( stringVector );
 }
-
-/*******************************************************/
-
-Lexer::Lexer()
-{}
 
 /*******************************************************/
 

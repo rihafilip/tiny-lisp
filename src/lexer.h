@@ -16,10 +16,7 @@ namespace lisp
 		static Value Scan( const std::string & str );
 
 	private:
-		/// Default contructor
-		Lexer();
-
-		Value begin ( vStack stack );
+		static Value begin ( vStack stack );
 
 		/**
 		 * Evaluates the tokens
@@ -27,14 +24,14 @@ namespace lisp
 		 * @param  acc  Accumulator of return value
 		 * @return      Tokenized expression
 		 */
-		Value evaluate ( std::pair<std::optional<Value>, vStack> pair , Value acc );
+		static Value evaluate ( std::pair<std::optional<Value>, vStack> pair , Value acc );
 
 		/**
 		 * Returns the next token in stack
 		 * @param  stack stack to pull form
 		 * @return  	    First is token or empty if there is none, second is rest of stack
 		 */
-		std::pair<std::optional<Value>, vStack> nextToken( vStack stack );
+		static std::pair<std::optional<Value>, vStack> nextToken( vStack stack );
 
 		/**
 		 * Returns the rest of token that satisfies comp
@@ -43,7 +40,7 @@ namespace lisp
 		 * @param  acc   string accumulator, return value
 		 * @return       string of the whole token
 		 */
-		std::pair<std::string, vStack> restOfToken( vStack stack, std::function<int(int)> comp, std::string acc );
+		static std::pair<std::string, vStack> restOfToken( vStack stack, std::function<int(int)> comp, std::string acc );
 
 		/// Makes Integer Value from string, returns it with untouched stack
 		static std::pair<std::optional<Value>, vStack> makeNumber ( std::pair<std::string, vStack> pair );
@@ -51,6 +48,6 @@ namespace lisp
 		static std::pair<std::optional<Value>, vStack> makeSymbol ( std::pair<std::string, vStack> pair );
 
 		/// Return stack without leading whitespaces
-		vStack skipSpace( vStack stack );
+		static vStack skipSpace( vStack stack );
 	};
 }
