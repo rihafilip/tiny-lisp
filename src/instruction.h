@@ -43,6 +43,10 @@ namespace lisp::secd
 		RTN,
 		DEFUN,
 
+		// recursive function
+		DUM,
+		RAP,
+
 		//IO
 		PRINT,
 		READ

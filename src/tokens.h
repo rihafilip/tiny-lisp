@@ -31,6 +31,7 @@ namespace lisp::tokens
 
     	"if",
         "let",
+        "letrec",
 
         // defining
     	"defun",

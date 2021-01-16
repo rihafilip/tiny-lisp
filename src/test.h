@@ -140,6 +140,11 @@ void testCompiler()
 	compile( "(let ((x 10) (y 20) (z 30)) ( `(,x ,y ,z) ))" );
 
 	compile( "(let ((x 10)) (+ x (let ((x 20)) x) ))" );
+
+	std::cout << "LETREC:" << std::endl<< std::endl;
+	compile( "(letrec ((x 10)) (+ x 10))" );
+	compile( "(letrec ((foo (lambda (x) (if (eq x 0) 0 (foo (- x 1))) ) )) (foo 5))" );
+	compile( "(letrec ((foo (lambda (x) (if (eq x 0) (print 'foo) (bar (- x 1))))) (bar (lambda (x) (if (eq x 0) (print 'bar) (foo (- x 1)))))) (foo 5 ) )");
 }
 
 void exec ( const std::string & str )
@@ -170,15 +175,16 @@ void testRuntime ()
 	exec( "(defun foo (x) (+ x 1)) (foo 0)" );
 	exec( "(defun foo (x) (+ x 1)) (defun bar (y) (- 10 (foo y)) ) (bar 5)" );
 	exec( "(defun foo (x) (+ x 1)) (- 4 (foo 2))" );
-
-	exec( "(print 'hello 'world) ");
-	exec( "(print (read)) ");
-	exec( "(+ 10 (read))" );
-	
 	exec( "(defun foo (x) (+ x 1)) ((lambda (x y) (x (+ y 10)) ) foo 10)" );	
 
-	exec ( "((lambda (x y) (x y 10)) + 2) " );
+	exec( "(print 'hello 'world) ");
+
+	exec ( "(let ((foo (+ 1 3))) foo)" );
+	exec( "(let ((foo (lambda () (print 'foo))) (bar (lambda () (print 'bar)))) (foo))" );
+	
+	exec ( "(letrec ((foo (lambda (x) (if (eq x 0) 0 (foo (- x 1))) ) )) (foo 2))" );
 }
+
 void test ()
 {
 	testGC();

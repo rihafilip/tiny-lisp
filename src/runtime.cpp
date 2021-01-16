@@ -150,6 +150,13 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		// reads from cin number or string symbol
 		case READ:
 			return Registers( _s . push( read() ), _e, _c, _d );
+
+		// pushes dummy value onto enviroment
+		case DUM:
+			return Registers( _s, _e . shifted() . setZeroDepth( Value::Dummy() ), _c, _d );
+
+		case RAP:
+			return recursiveApply( _s, _e, _c, _d );
 	}
 
 	// shouln't occurr
@@ -293,6 +300,32 @@ std::optional<Runtime::Registers> Runtime::apply ( const Stack & _s, const Envir
 		_d.push( toDump )
 	);
 }
+
+std::optional<Runtime::Registers> Runtime::recursiveApply ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+{
+	Value closure = _s . top();
+	Value args = _s . pop() . top();
+
+	// patch
+	// data -> on first depth -> on first index
+	Value dummy = _e . data() . car();
+	dummy.swapDummy( args );
+
+	// to push on dump
+	Stack dumpStack = _s . pop() . pop();
+	Enviroment dumpEnviroment = Enviroment ( _e . data() . cdr() );
+
+	Value toDump = Value::Cons( dumpStack . data(),
+		Value::Cons( dumpEnviroment . data(), _c . data() ) );
+
+	return Registers( 
+		Stack(),
+		Enviroment( closure . cdr() ),
+		Stack( closure . car() ),
+		_d.push(toDump)
+	);
+}
+
 std::optional<Runtime::Registers> Runtime::returns ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
 {
 	Value retVal = _s.top();

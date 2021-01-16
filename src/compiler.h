@@ -41,10 +41,14 @@ namespace lisp
 		static std::optional<Stack> CompileBuiltIn ( const std::string & val, const Stack & st, const EnvMap & env );
 		/// Compiles calling of built-in symbol
 		static std::optional<Stack> CompileBuiltInCall ( const std::string & val, const Stack & st, const EnvMap & env );
+		static std::optional<Stack> CompileBuiltInCallSimple ( Instruction val, const Stack & st, const EnvMap & env );
 		static std::optional<Stack> CompileSymbol ( const std::string & val, const Stack & st, const EnvMap & env );
 
 		static std::optional<Stack> CompileIf ( const Stack & st, const EnvMap & env );
+		
 		static std::optional<Stack> CompileLet ( const Stack & st, const EnvMap & env );
+		static std::optional<Stack> CompileLetrec ( const Stack & st, const EnvMap & env );
+		static std::tuple<std::optional<Value>, Value, EnvMap> CompileLetMain ( const Stack & st, const EnvMap & env );
 		static std::pair<std::optional<Value>, Value> CompileLetArgs ( const Stack & st, const Value & bodies, const Value & names );
 
 		static std::optional<Stack> CompileQuote ( const Stack & st, const EnvMap & env );

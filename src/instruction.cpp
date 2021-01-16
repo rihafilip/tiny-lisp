@@ -34,6 +34,9 @@ std::string lisp::secd::toString ( Instruction ins )
 		{ RTN, "RTN" },
 		{ DEFUN, "DEFUN" },
 
+		{ DUM, "DUM" },
+		{ RAP, "RAP" },
+
 		{ PRINT, "PRINT" },
 		{ READ, "READ" }
 	};

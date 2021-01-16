@@ -48,6 +48,7 @@ namespace lisp::secd
 
 		static std::optional<Registers> select ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
 		static std::optional<Registers> apply ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
+		static std::optional<Registers> recursiveApply ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
 		static std::optional<Registers> returns ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
 
 		static void print ( const Stack & s );

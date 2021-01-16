@@ -284,6 +284,7 @@ std::optional<Stack> Compiler::CompileBuiltInCall ( const std::string & val, con
 				return std::nullopt;
 			}
 		},
+		{ "letrec", CompileLetrec }
 	};
 
 	if ( builtInMap.count(val) )
@@ -377,24 +378,64 @@ std::optional<Stack> Compiler::CompileIf ( const Stack & st, const EnvMap & env 
 		. load ( arg1 );
 }
 
+/****************************************************************************/
+
 std::optional<Stack> Compiler::CompileLet ( const Stack & st, const EnvMap & env )
+{
+	auto [ optCompiledBody, argsBodies, nextEnv ] = CompileLetMain( st, env );
+
+	if ( ! optCompiledBody )
+		return std::nullopt;
+
+	Stack outAccumulator = Stack()
+		.push( Value::Instruction( AP ) )
+		.push( *optCompiledBody )
+		.push( Value::Instruction( LDF ) );
+
+	return CompileArgumentsList ( Stack ( argsBodies ), env, outAccumulator );
+}
+
+std::optional<Stack> Compiler::CompileLetrec ( const Stack & st, const EnvMap & env )
+{
+	auto [ optCompiledBody, argsBodies, nextEnv ] = CompileLetMain( st, env );
+
+	if ( ! optCompiledBody )
+		return std::nullopt;
+
+	Stack outAccumulator = Stack()
+		.push( Value::Instruction( RAP ) )
+		.push( *optCompiledBody )
+		.push( Value::Instruction( LDF ) );
+
+	std::optional<Stack> out = CompileArgumentsList ( Stack ( argsBodies ), nextEnv, outAccumulator );
+	if ( ! out )
+		return std::nullopt;
+
+	return out -> push( Value::Instruction( DUM ) );
+}
+
+std::tuple<std::optional<Value>, Value, Compiler::EnvMap> Compiler::CompileLetMain ( const Stack & st, const EnvMap & env )
 {
 	if ( ! AssertArgsCount( 2, st ) )
 	{
 		std::cerr << "Let has incorrect number of arguments." << std::endl;
-		return std::nullopt;
+		return { std::nullopt, Value::Null(), env };
 	}
 
+	// let definitions and let body
 	Value args = st.top();
 	Value body = st.pop().top();
 
+	// definitions names and bodies
 	auto [ optArgsBodies, argsNames ] = CompileLetArgs( Stack(args), Value::Null(), Value::Null() );
 
 	if ( ! optArgsBodies )
-		return std::nullopt;
+		return { std::nullopt, Value::Null(), env };
 
+	// next enviroment
 	EnvMap nextEnv = EnviromentAddValues( ShiftEnviroment( env ), argsNames );
 
+	// compile let body
 	std::optional<Stack> compiledBody;
 	if ( body.isCons() )
 		compiledBody = CompileCall( Stack( body ), nextEnv );
@@ -402,14 +443,9 @@ std::optional<Stack> Compiler::CompileLet ( const Stack & st, const EnvMap & env
 		compiledBody = CompileArguments ( Stack() . push( body ), nextEnv, Stack() );
 
 	if ( ! compiledBody )
-		return std::nullopt;
+		return { std::nullopt, Value::Null(), env };
 
-	Stack outAccumulator = Stack()
-		.push( Value::Instruction( AP ) )
-		.push( compiledBody -> data() )
-		.push( Value::Instruction( LDF ) );
-
-	return CompileArgumentsList ( Stack ( *optArgsBodies ), env, outAccumulator );
+	return { compiledBody -> data(), *optArgsBodies, nextEnv };
 }
 
 std::pair<std::optional<Value>, Value> Compiler::CompileLetArgs ( const Stack & st, const Value & bodies, const Value & names )
