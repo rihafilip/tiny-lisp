@@ -5,23 +5,30 @@ BIN=TinyLISP
 
 LD=g++
 LDFLAGS=
-
 CXX=g++
-CXXDBGFLAGS= -g -D 'DBG' -D 'TEST'
-CXXFLAGS=-std=c++17 -Wall -pedantic -Wno-long-long -c $(CXXDBGFLAGS)
+CXXFLAGS=-std=c++17 -Wall -pedantic -Wno-long-long -c
 
+## Default compile objects
+.PHONY: all
 all: $(OBJ)
 
-compile: $(BIN)
-
-run: compile
+## Run options
+.PHONY: run help library letrec
+run: $(BIN)
 	./$(BIN)
+help: $(BIN)
+	./$(BIN) --help
+library: $(BIN)
+	./$(BIN) -f lib/lib.tl
+letrec: $(BIN)
+	./$(BIN) -f lib/letrec.tl
 
-.PHONY: all compile run doc clear clean echo
-
-# Compile
+## Compile
 $(BIN): $(OBJ)
 	$(LD) $^ -o $@ $(LDFLAGS)
+
+## META
+.PHONY: doc clear clean echo
 
 # Documentation
 doc: 
@@ -29,7 +36,6 @@ doc:
 
 # Clean
 clear: clean
-
 clean:
 	rm -frd $(OBJ) $(BIN) Makefile.d doc
 
@@ -40,5 +46,4 @@ $(OBJ): build/%.o: src/%.cpp
 # Makefile dependencies
 Makefile.d: $(SRC) $(HEAD)
 	$(CXX) -MM $(SRC) | sed -E 's/(^.*\.o:)/build\/\1/' > Makefile.d
-
 -include Makefile.d
