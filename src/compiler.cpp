@@ -47,20 +47,23 @@ namespace
 		return EnviromentAddValues( enviroment, val.cdr(), ++counter );
 	}
 
+	/// EnviromentNext subroutine
+	int EnviromentNextSub ( Compiler::EnvMap::iterator i, Compiler::EnvMap::iterator end, int max )
+	{
+		if ( i == end )
+			return ++max;
+
+		std::cout << "\033[31m I is" << i -> second.cdr().num() << "\033[39m" << std::endl;
+		int nextMax = std::max( max, i -> second.cdr().num() );
+		return EnviromentNextSub( ++i, end, nextMax );
+	}
+
 	/// Returns index of the next value to be added to enviroment
 	int EnviromentNext ( Compiler::EnvMap env )
 	{
-		int max = 0;
-		if ( ! env.empty() )
-		{
-			max = std::max_element ( env.begin(), env.end(),
-				[] ( auto a, auto b )
-					{ return a.second.car().num() < b.second.car().num(); }
-			) -> second.cdr().num();
-
-			++max;
-		}
-		return max;
+		if ( env.empty() )
+			return 0;
+		return EnviromentNextSub( env.begin(), env.end(), 0 );
 	}
 
 	Value ConsAppend ( const Value & ls1, const Value & ls2, bool flag = true )
