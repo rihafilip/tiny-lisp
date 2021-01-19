@@ -271,13 +271,7 @@ void Value::print ( std::ostream & os, bool list ) const
 			break;
 
 		case GC::MemoryType::CLOS:
-			os << "<procedure";
-		#ifdef DBG
-			os << ": ";
-			car().print(os);
-			os << " ";
-		#endif
-			os << ">";
+			os << "<procedure>";
 			break;
 			
 		case GC::MemoryType::CONS:
