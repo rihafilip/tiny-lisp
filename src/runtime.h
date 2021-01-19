@@ -39,6 +39,10 @@ namespace lisp::secd
 		/// Executes single instruction
 		static std::optional<Registers> executeInstruction ( Instruction ins, const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
 
+		/**
+		 * \defgroup Runtime_help Runtime helper subroutines
+		 * @{
+		 */
 		static std::optional<Registers> binaryOperator ( Instruction ins, const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
 		static std::optional<Registers> equals ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d );
 
@@ -53,5 +57,6 @@ namespace lisp::secd
 
 		static void print ( const Stack & s );
 		static Value read ();
+		/// @}
 	};
 }
