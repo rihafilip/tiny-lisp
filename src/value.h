@@ -30,7 +30,7 @@ namespace lisp
 		static Value Integer ( int num );
 		static Value Symbol ( const std::string & in);
 		static Value Cons ( const Value & car, const Value & cdr );
-		static Value Closure( const Value & function, const Value & enviroment );
+		static Value Closure( const Value & function, const Value & environment );
 		static Value Instruction ( secd::Instruction instruct );
 		static Value Dummy ();
 		static Value Null ();

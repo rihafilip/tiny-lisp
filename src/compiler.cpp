@@ -7,11 +7,11 @@
 using namespace lisp;
 using namespace lisp::secd;
 
-// enviroment and functions helpers
+// environment and functions helpers
 namespace
 {
-	// shifts layer of enviroment by one
-	Compiler::EnvMap ShiftEnviroment( const Compiler::EnvMap & env )
+	// shifts layer of environment by one
+	Compiler::EnvMap ShiftEnvironment( const Compiler::EnvMap & env )
 	{
 		Compiler::EnvMap out;
 
@@ -21,7 +21,7 @@ namespace
 				return std::make_pair(
 					i.first,
 					Value::Cons(
-						Value::Integer( i.second.car().num() + 1), // ShiftEnviroment level by one
+						Value::Integer( i.second.car().num() + 1), // ShiftEnvironment level by one
 						i.second.cdr()
 					)
 				);
@@ -32,38 +32,38 @@ namespace
 	}
 
 	/**
-	 * add list of values to enviroment
-	 * @param  enviroment input enviroment
+	 * add list of values to environment
+	 * @param  environment input environment
 	 * @param  val        list of values
 	 * @param  counter    index of first variable
 	 * @return            new variable
 	 */
-	Compiler::EnvMap EnviromentAddValues(Compiler:: EnvMap enviroment, const Value & val, int counter = 0 )
+	Compiler::EnvMap EnvironmentAddValues(Compiler:: EnvMap environment, const Value & val, int counter = 0 )
 	{
 		if ( val .isNull() )
-			return enviroment;
+			return environment;
 
-		enviroment.insert( { val.car().sym(), Value::Cons( Value::Integer(0), Value::Integer(counter)) });
-		return EnviromentAddValues( enviroment, val.cdr(), ++counter );
+		environment.insert( { val.car().sym(), Value::Cons( Value::Integer(0), Value::Integer(counter)) });
+		return EnvironmentAddValues( environment, val.cdr(), ++counter );
 	}
 
-	/// EnviromentNext subroutine
-	int EnviromentNextSub ( Compiler::EnvMap::iterator i, Compiler::EnvMap::iterator end, int max )
+	/// EnvironmentNext subroutine
+	int EnvironmentNextSub ( Compiler::EnvMap::iterator i, Compiler::EnvMap::iterator end, int max )
 	{
 		if ( i == end )
 			return ++max;
 
 		std::cout << "\033[31m I is" << i -> second.cdr().num() << "\033[39m" << std::endl;
 		int nextMax = std::max( max, i -> second.cdr().num() );
-		return EnviromentNextSub( ++i, end, nextMax );
+		return EnvironmentNextSub( ++i, end, nextMax );
 	}
 
-	/// Returns index of the next value to be added to enviroment
-	int EnviromentNext ( Compiler::EnvMap env )
+	/// Returns index of the next value to be added to environment
+	int EnvironmentNext ( Compiler::EnvMap env )
 	{
 		if ( env.empty() )
 			return 0;
-		return EnviromentNextSub( env.begin(), env.end(), 0 );
+		return EnvironmentNextSub( env.begin(), env.end(), 0 );
 	}
 
 	Value ConsAppend ( const Value & ls1, const Value & ls2, bool flag = true )
@@ -435,8 +435,8 @@ std::tuple<std::optional<Value>, Value, Compiler::EnvMap> Compiler::CompileLetMa
 	if ( ! optArgsBodies )
 		return { std::nullopt, Value::Null(), env };
 
-	// next enviroment
-	EnvMap nextEnv = EnviromentAddValues( ShiftEnviroment( env ), argsNames );
+	// next environment
+	EnvMap nextEnv = EnvironmentAddValues( ShiftEnvironment( env ), argsNames );
 
 	// compile let body
 	std::optional<Stack> compiledBody;
@@ -562,15 +562,15 @@ std::tuple<Value, Compiler::EnvMap> Compiler::CompileDefun ( const Value & val, 
 
 	std::string name = val.cdr().car().sym();
 
-	// Add function to enviroment
+	// Add function to environment
 	EnvMap nextEnv = env;
 
-	int index = EnviromentNext( nextEnv );
+	int index = EnvironmentNext( nextEnv );
 	nextEnv.insert( { name, Value::Cons( Value::Integer(0), Value::Integer( index ) ) } );
 
 	std::optional<Stack> body = CompileBody( Stack( val.cdr().cdr() ), nextEnv );
 	if ( ! body )
-		return { Value::Null(), env }; // return unchanged enviroment map
+		return { Value::Null(), env }; // return unchanged environment map
 
 	return { Stack() . push( body -> data() ) . push( Value::Instruction( DEFUN ) ) . data(), nextEnv };
 }
@@ -586,7 +586,7 @@ std::optional<Stack> Compiler::CompileBody ( const Stack & st, const EnvMap & en
 	}
 
 	Value params = st.top();
-	EnvMap nextEnv = EnviromentAddValues( ShiftEnviroment( env ), params );
+	EnvMap nextEnv = EnvironmentAddValues( ShiftEnvironment( env ), params );
 
 	Value body = st.pop().top();
 

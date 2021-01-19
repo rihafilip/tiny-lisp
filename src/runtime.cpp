@@ -3,16 +3,16 @@
 
 using namespace lisp::secd;
 
-Enviroment Runtime::executeCode ( const Stack & code, const Enviroment & env )
+Environment Runtime::executeCode ( const Stack & code, const Environment & env )
 {
 	if ( code . empty() )
 		return env;
 
-	// new enviroment or, in case of corrupted code, previous enviroment
+	// new environment or, in case of corrupted code, previous environment
 	return executeCode( code.pop(), executeSource( Stack(), env, Stack( code.top() ), Stack() ) . value_or( env ) );
 }
 
-std::optional<Enviroment> Runtime::executeSource ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Environment> Runtime::executeSource ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	if ( _c . empty () )
 	{
@@ -34,7 +34,7 @@ std::optional<Enviroment> Runtime::executeSource ( const Stack & _s, const Envir
 	return executeSource ( out -> _s, out -> _e, out -> _c, out -> _d );
 }
 
-std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins, const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins, const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	switch ( ins )
 	{
@@ -102,32 +102,32 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return Registers( _s, _e, Stack (_d . top() ), _d . pop() );
 
 		// pops cons cell ( depth, index ) from code
-		// finds value in enviroment on given indexes
+		// finds value in environment on given indexes
 		// pushes that value on stack
 		case LD:
 		{
 			std::optional<Value> out = _e.onIndex( _c.top() );
 			if ( ! out )
 			{
-				std::cerr << "Accessing non-existent enviroment variable" << std::endl;
+				std::cerr << "Accessing non-existent environment variable" << std::endl;
 				return std::nullopt;				
 			}
 
 			return Registers( _s.push( *out ), _e, _c.pop(), _d );
 		}
 
-		// takes enviroment and pops body from code
-		// pushes on stack closure = ( body . enviroment )
+		// takes environment and pops body from code
+		// pushes on stack closure = ( body . environment )
 		case LDF:
 		{
-			Value enviroment = _e.data();
+			Value environment = _e.data();
 			Value code = _c.top();
 
-			return Registers( _s.push( Value::Closure( code, enviroment ) ), _e, _c.pop(), _d );
+			return Registers( _s.push( Value::Closure( code, environment ) ), _e, _c.pop(), _d );
 		}
 
-		// takes enviroment and pops body from code
-		// adds closure into enviroment
+		// takes environment and pops body from code
+		// adds closure into environment
 		case DEFUN:
 			return defun( _s, _e, _c, _d );
 
@@ -137,7 +137,7 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 			return apply( _s, _e, _c, _d );
 
 		// pops return value from stack
-		// returns state of stack, enviroment and code from dump
+		// returns state of stack, environment and code from dump
 		// pushes return value onto stack
 		case RTN:
 			return returns( _s, _e, _c, _d);
@@ -151,7 +151,7 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 		case READ:
 			return Registers( _s . push( read() ), _e, _c, _d );
 
-		// pushes dummy value onto enviroment
+		// pushes dummy value onto environment
 		case DUM:
 			return Registers( _s, _e . shifted() . setZeroDepth( Value::Dummy() ), _c, _d );
 
@@ -164,7 +164,7 @@ std::optional<Runtime::Registers> Runtime::executeInstruction ( Instruction ins,
 	return std::nullopt;
 }
 
-std::optional<Runtime::Registers> Runtime::binaryOperator ( Instruction ins, const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::binaryOperator ( Instruction ins, const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value rhsV = _s.top();
 	Value lhsV = _s.pop().top();
@@ -207,7 +207,7 @@ std::optional<Runtime::Registers> Runtime::binaryOperator ( Instruction ins, con
 	return Registers( _s.pop().pop().push(Value::Integer(out)), _e, _c, _d );
 }
 
-std::optional<Runtime::Registers> Runtime::equals ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::equals ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value rhs = _s.top();
 	Value lhs = _s.pop().top();
@@ -221,7 +221,7 @@ std::optional<Runtime::Registers> Runtime::equals ( const Stack & _s, const Envi
 	return Registers( _s.pop().pop().push( Value::Integer(output) ) , _e, _c, _d );
 }
 
-std::optional<Runtime::Registers> Runtime::consAccess ( Instruction ins, const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::consAccess ( Instruction ins, const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value lst = _s.top();
 	if ( ! lst.isCons()  )
@@ -240,18 +240,18 @@ std::optional<Runtime::Registers> Runtime::consAccess ( Instruction ins, const S
 	return Registers( _s.pop().push( out ), _e, _c, _d );
 }
 
-std::optional<Runtime::Registers> Runtime::defun ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::defun ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value dummyClos = Value::Dummy();
 	Value envCar = _e.data().car();
 	Value envCdr = _e.data().cdr();
 
-	Value enviroment = Value::Cons(
+	Value environment = Value::Cons(
 		envCar . append( Value::Cons( dummyClos, Value::Null() ) ),
 		envCdr
 	);
 
-	Value clos = Value::Closure( _c .top(), enviroment );
+	Value clos = Value::Closure( _c .top(), environment );
 	dummyClos . swapDummy( clos );
 
 	return Registers( _s, _e.add ( clos ), _c.pop(), _d );
@@ -259,7 +259,7 @@ std::optional<Runtime::Registers> Runtime::defun ( const Stack & _s, const Envir
 
 // if
 // 0 means false, everything else means true
-std::optional<Runtime::Registers> Runtime::select ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::select ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value condition = _s . top();
 	Value truecase = _c.top();
@@ -277,10 +277,10 @@ std::optional<Runtime::Registers> Runtime::select ( const Stack & _s, const Envi
 }
 
 // stack = empty
-// enviroment = closure.cdr + args
+// environment = closure.cdr + args
 // code = closure.car
-// to dump is pushed ( stack enviroment . code )
-std::optional<Runtime::Registers> Runtime::apply ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+// to dump is pushed ( stack environment . code )
+std::optional<Runtime::Registers> Runtime::apply ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value clos = _s.top();
 	if ( ! clos.isClos()  )
@@ -295,13 +295,13 @@ std::optional<Runtime::Registers> Runtime::apply ( const Stack & _s, const Envir
 
 	return Registers (
 		Stack(),
-		Enviroment( clos . cdr() ) . shifted() . setZeroDepth ( args ) ,
+		Environment( clos . cdr() ) . shifted() . setZeroDepth ( args ) ,
 		Stack( clos.car() ),
 		_d.push( toDump )
 	);
 }
 
-std::optional<Runtime::Registers> Runtime::recursiveApply ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::recursiveApply ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value closure = _s . top();
 	Value args = _s . pop() . top();
@@ -313,27 +313,27 @@ std::optional<Runtime::Registers> Runtime::recursiveApply ( const Stack & _s, co
 
 	// to push on dump
 	Stack dumpStack = _s . pop() . pop();
-	Enviroment dumpEnviroment = Enviroment ( _e . data() . cdr() );
+	Environment dumpEnvironment = Environment ( _e . data() . cdr() );
 
 	Value toDump = Value::Cons( dumpStack . data(),
-		Value::Cons( dumpEnviroment . data(), _c . data() ) );
+		Value::Cons( dumpEnvironment . data(), _c . data() ) );
 
 	return Registers( 
 		Stack(),
-		Enviroment( closure . cdr() ),
+		Environment( closure . cdr() ),
 		Stack( closure . car() ),
 		_d.push(toDump)
 	);
 }
 
-std::optional<Runtime::Registers> Runtime::returns ( const Stack & _s, const Enviroment & _e, const Stack & _c, const Stack & _d )
+std::optional<Runtime::Registers> Runtime::returns ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d )
 {
 	Value retVal = _s.top();
-	// ( stack enviroment . code )
+	// ( stack environment . code )
 	Value prev = _d.top();
 
 	Stack st = Stack ( prev.car() ) . push( retVal );
-	Enviroment env = Enviroment ( prev.cdr().car() );
+	Environment env = Environment ( prev.cdr().car() );
 	Stack code = Stack ( prev.cdr().cdr() );
 	return Registers( st, env, code, _d.pop() );
 }

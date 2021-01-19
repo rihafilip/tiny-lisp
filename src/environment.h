@@ -5,15 +5,15 @@
 namespace lisp
 {
 	/**
-	 * Immutable structure that organizes enviroment of SECD machine
+	 * Immutable structure that organizes environment of SECD machine
 	 */
-	class Enviroment
+	class Environment
 	{
 	public:
 		/// Default constructor
-		Enviroment();
+		Environment();
 		/// Constructor with val lying underneath
-		Enviroment ( const Value & val );
+		Environment ( const Value & val );
 			
 		/**
 		 * Returns value on given index
@@ -22,18 +22,18 @@ namespace lisp
 		 */
 		std::optional<Value> onIndex ( const Value & on ) const;
 
-		/// Return new enviroment with added input
-		Enviroment add ( const Value & val ) const;
+		/// Return new environment with added input
+		Environment add ( const Value & val ) const;
 
-		/// Return new enviroment, where zero depth is input
-		Enviroment setZeroDepth ( const Value & val ) const;
-		/// Returns new enviroment, where new zero depth is pushed
-		Enviroment shifted () const;
+		/// Return new environment, where zero depth is input
+		Environment setZeroDepth ( const Value & val ) const;
+		/// Returns new environment, where new zero depth is pushed
+		Environment shifted () const;
 
 		/// Returns raw underlying Value
 		Value data () const;
 
-		friend std::ostream & operator<< ( std::ostream & os, const Enviroment & env );
+		friend std::ostream & operator<< ( std::ostream & os, const Environment & env );
 
 	private:
 		/// onIndex subproccess

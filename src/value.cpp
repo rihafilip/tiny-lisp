@@ -16,9 +16,9 @@ Value Value::Cons ( const Value & car, const Value & cdr )
 	return Value ( GC::GetMemory( car.memory, cdr.memory, false ) );
 }
 
-Value Value::Closure ( const Value & function, const Value & enviroment )
+Value Value::Closure ( const Value & function, const Value & environment )
 {
-	return Value ( GC::GetMemory( function.memory, enviroment.memory, true ) );
+	return Value ( GC::GetMemory( function.memory, environment.memory, true ) );
 }
 
 Value Value::Instruction ( secd::Instruction instruct )

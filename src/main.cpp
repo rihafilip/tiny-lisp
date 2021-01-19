@@ -9,7 +9,7 @@
 using namespace lisp;
 using namespace std;
 
-pair<Enviroment, Compiler::EnvMap> evaluate ( const string & str, const Enviroment & env, const Compiler::EnvMap & envMap )
+pair<Environment, Compiler::EnvMap> evaluate ( const string & str, const Environment & env, const Compiler::EnvMap & envMap )
 {
 	auto [ code, outEnvMap ] = Compiler::CompileCode( Parser::Parse( Lexer::Scan( str ) ), envMap );
 	return { 
@@ -18,7 +18,7 @@ pair<Enviroment, Compiler::EnvMap> evaluate ( const string & str, const Envirome
 	};
 }
 
-void read ( const Enviroment & env = Enviroment(), const Compiler::EnvMap & envMap = Compiler::EnvMap() )
+void read ( const Environment & env = Environment(), const Compiler::EnvMap & envMap = Compiler::EnvMap() )
 {
 	if ( ! cin.good() )
 	{
@@ -39,7 +39,7 @@ void read ( const Enviroment & env = Enviroment(), const Compiler::EnvMap & envM
 	return read( nextEnv, nextEnvMap );
 }
 
-pair<Enviroment, Compiler::EnvMap> parseArgs( int argc, char const *argv[], const Enviroment & env = Enviroment(), const Compiler::EnvMap & envMap = Compiler::EnvMap() )
+pair<Environment, Compiler::EnvMap> parseArgs( int argc, char const *argv[], const Environment & env = Environment(), const Compiler::EnvMap & envMap = Compiler::EnvMap() )
 {
 	if ( argc == 0 )
 		return { env, envMap };
