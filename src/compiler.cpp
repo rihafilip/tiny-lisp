@@ -53,7 +53,6 @@ namespace
 		if ( i == end )
 			return ++max;
 
-		std::cout << "\033[31m I is" << i -> second.cdr().num() << "\033[39m" << std::endl;
 		int nextMax = std::max( max, i -> second.cdr().num() );
 		return EnvironmentNextSub( ++i, end, nextMax );
 	}
