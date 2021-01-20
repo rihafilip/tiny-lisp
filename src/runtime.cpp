@@ -338,13 +338,17 @@ std::optional<Runtime::Registers> Runtime::returns ( const Stack & _s, const Env
 	return Registers( st, env, code, _d.pop() );
 }
 
-void Runtime::print ( const Stack & s )
+void Runtime::print ( const Stack & s, bool first )
 {
 	if ( s.top().isNull()  )
+	{
+		if ( ! first )
+			std::cout << std::endl;
 		return;
+	}
 
 	std::cout << s.top() << " ";	
-	return print( s.pop() );
+	return print( s.pop(), false );
 }
 
 Value Runtime::read ()

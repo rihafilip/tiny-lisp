@@ -55,7 +55,7 @@ namespace lisp::secd
 		static std::optional<Registers> recursiveApply ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d );
 		static std::optional<Registers> returns ( const Stack & _s, const Environment & _e, const Stack & _c, const Stack & _d );
 
-		static void print ( const Stack & s );
+		static void print ( const Stack & s, bool first = true );
 		static Value read ();
 		/// @}
 	};
