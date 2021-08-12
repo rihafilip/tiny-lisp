@@ -2,7 +2,6 @@
 
 TinyLisp is a lisp-like programing language, interpreting a small subset of Lisp expressions.
 
-This project contains TinyLisp interpreter, including garbage collector, lexer, parser, compiler and virtual SEDC machine.
 
 It can read expressions from file, or run in REPL mode.
 
